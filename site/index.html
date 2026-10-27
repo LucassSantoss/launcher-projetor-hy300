@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-billing="monthly">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projetor para HY300</title>
+<meta name="description" content="Tela inicial nova e controle pelo celular para projetores HY300 e parecidos. Como instalar, usar e remover.">
+<meta property="og:title" content="Projetor para HY300">
+<meta property="og:description" content="Tela inicial nova e controle pelo celular para projetores HY300 e parecidos. Como instalar, usar e remover.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="passos/06-tela-inicial.webp">
+<meta name="author" content="MLAB SOLUCTION">
+<meta property="og:site_name" content="MLAB SOLUCTION">
+<meta name="theme-color" content="#0A0A0A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   MLAB — tokens
+   Paleta estritamente monocromática. Hierarquia vem de inversão
+   de seção, peso tipográfico, contraste em degraus e movimento.
+   ============================================================ */
+:root{
+  /* superfícies e tinta — trocam de valor dentro de [data-invert] */
+  --paper:#0A0A0A; --paper-2:#121212; --paper-3:#1A1A1A;
+  --ink:#FFFFFF;   --ink-2:#A3A3A3;   --ink-3:#737373;
+  --line:#262626;  --line-2:#3D3D3D;
+
+  /* tipografia */
+  --font-display:'Space Grotesk',system-ui,sans-serif;
+  --font-body:'Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:ui-monospace,'SF Mono',Menlo,monospace;
+
+  --step--1:clamp(.78rem,.75rem + .15vw,.85rem);
+  --step-0: clamp(1rem,.96rem + .2vw,1.0625rem);
+  --step-1: clamp(1.15rem,1.05rem + .45vw,1.375rem);
+  --step-2: clamp(1.5rem,1.3rem + .9vw,2rem);
+  --step-3: clamp(2rem,1.55rem + 2vw,3rem);
+  --step-4: clamp(2.5rem,1.7rem + 3.5vw,4.5rem);
+  --step-5: clamp(3rem,1.8rem + 5.2vw,6.5rem);
+
+  /* espaço */
+  --s-1:.5rem; --s-2:.75rem; --s-3:1rem; --s-4:1.5rem;
+  --s-5:2rem;  --s-6:3rem;   --s-7:4rem; --s-8:6rem;
+  --gutter:clamp(1.25rem,4vw,2.5rem);
+  --section-y:clamp(4rem,10vw,8rem);
+  --wrap:1200px;
+  --wrap-narrow:720px;
+  --header-h:72px;
+
+  --radius:2px;              /* a marca é angular: raio quase zero */
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+
+/* Inversão: o recurso de hierarquia mais forte do sistema.
+   Todo componente usa var(--ink)/var(--paper), então basta trocar os tokens. */
+[data-invert]{
+  --paper:#FAFAFA; --paper-2:#F1F1F1; --paper-3:#E7E7E7;
+  --ink:#0A0A0A;   --ink-2:#525252;   --ink-3:#737373;
+  --line:#E2E2E2;  --line-2:#CFCFCF;
+  background:var(--paper); color:var(--ink);
+}
+
+/* ---------- reset ---------- */
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0}
+html{-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:var(--font-body); font-size:var(--step-0);
+  line-height:1.6; -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img,svg,video{display:block;max-width:100%;height:auto}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+[id]{scroll-margin-top:calc(var(--header-h) + 1rem)}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+::selection{background:var(--ink);color:var(--paper)}
+
+/* ---------- layout ---------- */
+.wrap{width:100%;max-width:var(--wrap);margin-inline:auto;padding-inline:var(--gutter)}
+.wrap--narrow{max-width:var(--wrap-narrow)}
+.section{padding-block:var(--section-y);position:relative}
+.section + .section{border-top:1px solid var(--line)}
+[data-invert] + [data-invert]{border-top-color:var(--line)}
+.stack > * + *{margin-top:var(--s-3)}
+.stack-lg > * + *{margin-top:var(--s-5)}
+.grid{display:grid;gap:var(--s-4)}
+@media (min-width:768px){
+  .grid--2{grid-template-columns:repeat(2,1fr)}
+  .grid--3{grid-template-columns:repeat(3,1fr)}
+  .grid--4{grid-template-columns:repeat(2,1fr)}
+}
+@media (min-width:1024px){ .grid--4{grid-template-columns:repeat(4,1fr)} }
+.center{text-align:center}
+.center .eyebrow{justify-content:center}
+
+/* ---------- tipografia ---------- */
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:700;line-height:1.05;letter-spacing:-.02em;text-wrap:balance}
+h1{font-size:var(--step-4)}
+h2{font-size:var(--step-3)}
+h3{font-size:var(--step-1)}
+.display{font-size:var(--step-5);font-family:var(--font-display);font-weight:700;line-height:.95;letter-spacing:-.035em}
+.lead{font-size:var(--step-1);color:var(--ink-2);line-height:1.45;max-width:52ch;text-wrap:pretty}
+.muted{color:var(--ink-2)}
+.subtle{color:var(--ink-3);font-size:var(--step--1)}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:.6rem;
+  font-family:var(--font-mono);font-size:.7rem;font-weight:500;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);
+  margin-bottom:var(--s-3);
+}
+.eyebrow::before{content:'';width:1.75rem;height:1px;background:var(--line-2)}
+.center .eyebrow::after{content:'';width:1.75rem;height:1px;background:var(--line-2)}
+.stat{font-family:var(--font-display);font-size:var(--step-4);font-weight:700;line-height:1;letter-spacing:-.03em}
+
+/* Colchetes do logo: moldura para o elemento mais importante da seção. */
+.bracket{position:relative;padding:var(--s-5)}
+.bracket::before,.bracket::after{
+  content:'';position:absolute;width:28px;height:28px;
+  border:2px solid var(--ink);pointer-events:none;
+}
+.bracket::before{top:0;left:0;border-right:0;border-bottom:0}
+.bracket::after{bottom:0;right:0;border-left:0;border-top:0}
+
+/* ---------- botões ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.6rem;
+  padding:.95rem 1.75rem;border-radius:var(--radius);
+  font-weight:600;font-size:var(--step-0);line-height:1;
+  border:1px solid var(--ink);white-space:nowrap;
+  transition:transform .2s var(--ease),background .2s,color .2s,opacity .2s;
+}
+.btn--primary{background:var(--ink);color:var(--paper)}
+.btn--primary:hover{transform:translateY(-2px)}
+.btn--ghost{background:transparent;color:var(--ink);border-color:var(--line-2)}
+.btn--ghost:hover{border-color:var(--ink)}
+.btn--lg{padding:1.15rem 2.25rem;font-size:var(--step-1)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn-row{display:flex;flex-wrap:wrap;gap:var(--s-3)}
+.center .btn-row{justify-content:center}
+
+/* ---------- cards ---------- */
+.card{
+  background:var(--paper-2);border:1px solid var(--line);
+  border-radius:var(--radius);padding:var(--s-5);
+  transition:border-color .25s,transform .25s var(--ease);
+}
+.card:hover{border-color:var(--line-2);transform:translateY(-3px)}
+.card--flat{background:transparent}
+.card__num{font-family:var(--font-mono);font-size:var(--step--1);color:var(--ink-3);letter-spacing:.1em}
+.badge{
+  display:inline-block;padding:.3rem .7rem;border:1px solid var(--line-2);
+  border-radius:var(--radius);font-family:var(--font-mono);
+  font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);
+}
+.badge--solid{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* ---------- header ---------- */
+.header{
+  position:fixed;inset:0 0 auto;z-index:100;height:var(--header-h);
+  display:flex;align-items:center;
+  border-bottom:1px solid transparent;transition:background .3s,border-color .3s;
+}
+.header.is-scrolled{background:rgba(10,10,10,.85);backdrop-filter:blur(12px);border-bottom-color:var(--line)}
+.header__inner{display:flex;align-items:center;justify-content:space-between;gap:var(--s-4);width:100%}
+.logo{font-family:var(--font-display);font-weight:700;font-size:1.15rem;letter-spacing:-.02em;display:flex;align-items:center;gap:.45rem}
+.logo span{font-family:var(--font-mono);font-size:.7rem;font-weight:500;letter-spacing:.3em;color:var(--ink-2)}
+.nav{display:none;align-items:center;gap:var(--s-5)}
+.nav a{font-size:var(--step--1);color:var(--ink-2);transition:color .2s}
+.nav a:hover{color:var(--ink)}
+@media (min-width:900px){ .nav{display:flex} .nav-toggle{display:none} }
+.nav-toggle{width:44px;height:44px;display:grid;place-items:center;margin-right:-10px}
+.nav-toggle span{display:block;width:22px;height:1.5px;background:var(--ink);position:relative;transition:background .2s}
+.nav-toggle span::before,.nav-toggle span::after{content:'';position:absolute;left:0;width:22px;height:1.5px;background:var(--ink);transition:transform .3s var(--ease)}
+.nav-toggle span::before{top:-7px} .nav-toggle span::after{top:7px}
+body.nav-open .nav-toggle span{background:transparent}
+body.nav-open .nav-toggle span::before{transform:translateY(7px) rotate(45deg)}
+body.nav-open .nav-toggle span::after{transform:translateY(-7px) rotate(-45deg)}
+.nav-mobile{
+  position:fixed;inset:var(--header-h) 0 0;z-index:99;background:var(--paper);
+  display:flex;flex-direction:column;justify-content:center;gap:var(--s-4);
+  padding:var(--gutter);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;
+}
+body.nav-open .nav-mobile{opacity:1;visibility:visible}
+body.nav-open{overflow:hidden}
+.nav-mobile a{font-family:var(--font-display);font-size:var(--step-2);font-weight:700}
+@media (min-width:900px){ .nav-mobile{display:none} }
+
+/* ---------- reveal ---------- */
+[data-reveal]{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+[data-reveal].is-in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  [data-reveal]{opacity:1;transform:none;transition:none}
+  .btn:hover,.card:hover{transform:none}
+}
+
+/* ---------- accordion (FAQ) ---------- */
+.acc__item{border-bottom:1px solid var(--line)}
+.acc__trigger{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--s-4);
+  padding:var(--s-4) 0;text-align:left;font-family:var(--font-display);
+  font-weight:500;font-size:var(--step-1);color:var(--ink);
+}
+.acc__icon{position:relative;flex:0 0 18px;height:18px}
+.acc__icon::before,.acc__icon::after{content:'';position:absolute;inset:50% 0 auto;height:1.5px;background:var(--ink);transition:transform .3s var(--ease)}
+.acc__icon::after{transform:rotate(90deg)}
+.acc__item.is-open .acc__icon::after{transform:rotate(0)}
+.acc__panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease)}
+.acc__item.is-open .acc__panel{grid-template-rows:1fr}
+.acc__panel > div{overflow:hidden}
+.acc__panel p{padding-bottom:var(--s-4);color:var(--ink-2);max-width:65ch}
+
+/* ---------- tabs ---------- */
+.tabs__list{display:flex;gap:var(--s-1);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs__list::-webkit-scrollbar{display:none}
+.tabs__tab{
+  padding:var(--s-3) var(--s-4);white-space:nowrap;color:var(--ink-3);
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s;
+}
+.tabs__tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tabs__panel{padding-top:var(--s-5)}
+.tabs__panel[hidden]{display:none}
+
+/* ---------- carrossel ---------- */
+.carousel__track{
+  display:flex;gap:var(--s-4);overflow-x:auto;scroll-snap-type:x mandatory;
+  scrollbar-width:none;padding-bottom:var(--s-2);
+}
+.carousel__track::-webkit-scrollbar{display:none}
+.carousel__slide{flex:0 0 min(88%,380px);scroll-snap-align:start}
+.carousel__nav{display:flex;gap:var(--s-2);margin-top:var(--s-4)}
+.carousel__btn{
+  width:44px;height:44px;display:grid;place-items:center;
+  border:1px solid var(--line-2);border-radius:var(--radius);transition:border-color .2s,opacity .2s;
+}
+.carousel__btn:hover{border-color:var(--ink)}
+.carousel__btn[disabled]{opacity:.3;pointer-events:none}
+
+/* ---------- preço ---------- */
+.billing-toggle{display:inline-flex;border:1px solid var(--line);border-radius:var(--radius);padding:3px}
+.billing-toggle button{padding:.5rem 1.1rem;font-size:var(--step--1);color:var(--ink-3);border-radius:var(--radius);transition:background .2s,color .2s}
+.billing-toggle button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+[data-price]{display:none}
+[data-billing="monthly"] [data-price="monthly"],
+[data-billing="annual"]  [data-price="annual"]{display:inline}
+
+/* ---------- formulário ---------- */
+.field{display:flex;flex-direction:column;gap:.45rem}
+.field label{font-size:var(--step--1);color:var(--ink-2)}
+.field input,.field select,.field textarea{
+  width:100%;padding:.9rem 1rem;background:var(--paper-2);
+  border:1px solid var(--line);border-radius:var(--radius);
+  transition:border-color .2s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--ink)}
+.field__error{font-size:var(--step--1);color:var(--ink-2);display:none;align-items:center;gap:.4rem}
+.field__error::before{content:'!';font-family:var(--font-mono);font-weight:700;width:1.1em;height:1.1em;display:grid;place-items:center;border:1.5px solid currentColor;border-radius:50%;font-size:.7em}
+/* Sem vermelho: o erro se marca por borda grossa + ícone. */
+.field.is-invalid input,.field.is-invalid select,.field.is-invalid textarea{border-width:2px;border-color:var(--ink)}
+.field.is-invalid .field__error{display:flex}
+.form__status{display:none;padding:var(--s-4);border:1px solid var(--line-2);border-radius:var(--radius);margin-top:var(--s-3)}
+.form__status.is-visible{display:block}
+.spinner{width:1em;height:1em;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- footer ---------- */
+.footer{padding-block:var(--s-7) var(--s-5);border-top:1px solid var(--line)}
+.footer__grid{display:grid;gap:var(--s-5);grid-template-columns:1fr}
+@media (min-width:768px){ .footer__grid{grid-template-columns:2fr 1fr 1fr} }
+.footer__bottom{margin-top:var(--s-6);padding-top:var(--s-4);border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:var(--s-3);justify-content:space-between;color:var(--ink-3);font-size:var(--step--1)}
+
+/* ---------- modal ---------- */
+dialog{
+  border:1px solid var(--line-2);border-radius:var(--radius);
+  background:var(--paper-2);color:var(--ink);
+  padding:var(--s-5);max-width:min(560px,92vw);width:100%;
+}
+dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+
+/* ---------- Projetor: guia ---------- */
+@media (min-width:900px){ .nav-toggle{display:none} }
+.hero__grid{display:grid;gap:var(--s-6);align-items:center}
+@media (min-width:1024px){ .hero__grid{grid-template-columns:1.05fr 1fr} .hero .display{font-size:var(--step-4)} }
+
+/* Prints da tela do projetor: monocromáticos, emoldurados por fio. */
+.shot{margin:0;border:1px solid var(--line-2);border-radius:var(--radius);overflow:hidden;background:var(--paper-2)}
+.shot img{width:100%;height:auto;filter:grayscale(1) contrast(1.05)}
+.shot--hero{box-shadow:0 30px 80px rgba(0,0,0,.6)}
+
+/* Escolha do método (interação âncora) */
+.choice{display:flex;flex-direction:column;align-items:flex-start;gap:var(--s-2);text-align:left;padding:var(--s-5);
+  border:1px solid var(--line-2);border-radius:var(--radius);background:var(--paper);min-height:100%;
+  transition:border-color .2s,transform .3s var(--ease)}
+.choice:hover,.choice:focus-visible{border-color:var(--ink);transform:translateY(-3px)}
+.choice__title{font-family:var(--font-display);font-weight:700;font-size:var(--step-2);line-height:1.1;letter-spacing:-.02em}
+.choice__go{margin-top:auto;padding-top:var(--s-3);font-family:var(--font-mono);font-size:var(--step--1);letter-spacing:.08em;text-transform:uppercase}
+
+/* Cabeçalho de cada método */
+.method-head{display:flex;flex-direction:column;gap:var(--s-3);align-items:flex-start;padding-bottom:var(--s-5);border-bottom:1px solid var(--line)}
+@media (min-width:768px){ .method-head{flex-direction:row;align-items:center;justify-content:space-between} .method-head p{max-width:60ch} }
+.method-head .badge{margin-right:.4rem}
+
+/* Passo a passo numerado */
+.steps{list-style:none;padding:0;margin:var(--s-5) 0 0;counter-reset:step}
+.step{counter-increment:step;display:grid;gap:var(--s-4);padding-block:var(--s-5);border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0}
+.step__text{position:relative;padding-left:3.25rem}
+.step__text::before{content:counter(step,decimal-leading-zero);position:absolute;left:0;top:.1rem;
+  font-family:var(--font-mono);font-size:var(--step--1);letter-spacing:.1em;color:var(--ink-3);
+  width:2.4rem;height:2.4rem;display:grid;place-items:center;border:1px solid var(--line-2);border-radius:var(--radius)}
+.step__text h3{font-size:var(--step-2);margin-bottom:var(--s-2)}
+.step__text p + p{margin-top:var(--s-2)}
+.step .shot{margin-left:3.25rem}
+@media (min-width:900px){
+  .step{grid-template-columns:1fr 1.15fr;align-items:center;gap:var(--s-6)}
+  .step .shot{margin-left:0}
+  .steps--plain .step{grid-template-columns:1fr}
+}
+.url{font-family:var(--font-mono);font-size:var(--step-1);padding:.6rem .9rem;border:1px solid var(--line-2);border-radius:var(--radius);display:inline-block;margin-block:var(--s-2);word-break:break-all}
+.url--inline{display:inline-block;font-size:inherit;padding:.1rem .4rem;margin:.2rem 0 0;white-space:nowrap}
+.next{margin-top:var(--s-5);color:var(--ink-2)}
+.next a,.method-head a:not(.btn),.step__text a,.subtle a,.acc__panel a{text-decoration:underline;text-underline-offset:3px}
+
+/* Texto pronto para o Claude Code */
+.prompt{margin-top:var(--s-3);display:flex;flex-direction:column;gap:var(--s-3);align-items:flex-start}
+.prompt pre{width:100%;max-height:11rem;overflow:auto;white-space:pre-wrap;word-break:break-word;margin:0;
+  font-family:var(--font-mono);font-size:.82rem;line-height:1.55;color:var(--ink-2);
+  background:var(--paper-2);border:1px solid var(--line-2);border-radius:var(--radius);padding:var(--s-4)}
+code{font-family:var(--font-mono);font-size:.9em}
+.acc__panel p + p{margin-top:0}
+/* ---------- Celular: abas em barra unica e passos em cartoes que deslizam ---------- */
+@media (max-width:767px){
+  #instalar .tabs__list{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line-2);border-radius:var(--radius);overflow:hidden}
+  #instalar .tabs__tab{text-align:center;padding:.8rem .3rem;font-size:var(--step--1);border:0;border-left:1px solid var(--line-2);margin:0;white-space:nowrap}
+  #instalar .tabs__tab:first-child{border-left:0}
+  #instalar .tabs__tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+  .tabs__panel{padding-top:var(--s-4)}
+  .method-head{flex-direction:row;align-items:center;justify-content:space-between;gap:var(--s-3);padding-bottom:var(--s-4)}
+  .method-head .btn{padding:.7rem 1rem;font-size:var(--step--1);white-space:nowrap;flex:none}
+
+  .steps{display:flex;align-items:flex-start;gap:var(--s-3);overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;
+    margin:var(--s-4) calc(-1 * var(--gutter)) 0;padding:0 var(--gutter) var(--s-2);scroll-padding-inline:var(--gutter);scrollbar-width:none}
+  .steps::-webkit-scrollbar{display:none}
+  .step{flex:0 0 84%;scroll-snap-align:start;display:flex;flex-direction:column;gap:var(--s-3);
+    padding:var(--s-4);border:1px solid var(--line-2);border-radius:var(--radius);background:var(--paper-2)}
+  .step:last-child{border-bottom:1px solid var(--line-2)}
+  .step:only-child{flex-basis:100%}
+  .step .shot{order:-1;margin-left:0}
+  .step__text{padding-left:0}
+  .step__text::before{position:static;display:inline-grid;width:auto;height:auto;border:0;padding:0;margin-bottom:var(--s-2)}
+  .step__text h3{font-size:var(--step-1)}
+  .steps--plain .step{flex-basis:84%}
+  .prompt pre{max-height:9rem}
+}
+.dots{display:none}
+@media (max-width:767px){
+  .dots{display:flex;gap:6px;justify-content:center;margin-top:var(--s-3)}
+  .dots span{width:6px;height:6px;border-radius:50%;background:var(--line-2);transition:background .2s,transform .2s}
+  .dots span.on{background:var(--ink);transform:scale(1.25)}
+}
+
+
+/* Apoie (Pix) */
+.pix{display:grid;gap:var(--s-6);align-items:center}
+@media (min-width:768px){ .pix{grid-template-columns:1.3fr 1fr} }
+.pix__qr{margin:0;justify-self:start;display:flex;flex-direction:column;gap:var(--s-3);align-items:center}
+.pix__qr svg{width:min(260px,70vw);height:auto;border:1px solid var(--line-2)}
+.pix__code{margin:var(--s-3) 0 0;font-family:var(--font-mono);font-size:.72rem;line-height:1.5;color:var(--ink-3);white-space:pre-wrap;word-break:break-all;max-width:44ch}
+
+/* Ilustracoes: pendrive (traco) e telas do instalador desenhadas num celular */
+.shot--art{display:grid;place-items:center;padding:var(--s-5);color:var(--ink-2)}
+.shot--art svg{width:100%;max-width:320px;height:auto}
+@media (min-width:768px){ .shot--tall{max-width:300px} .steps--adb .step{grid-template-columns:1fr 300px} }
+.phone{margin:0 auto;width:min(100%,196px);aspect-ratio:9/16.5;border:2px solid var(--line-2);border-radius:28px;padding:10px;background:#000}
+.phone__screen{height:100%;border-radius:20px;background:#0A0A0A;padding:18px 12px;display:flex;flex-direction:column;gap:7px;overflow:hidden;font-family:Roboto,system-ui,sans-serif}
+.ph-t{font-weight:700;font-size:1.05rem;color:#fff;letter-spacing:-.01em}
+.ph-b{font-weight:700;font-size:.85rem;color:#fff}
+.ph-s{font-size:.7rem;color:#A3A3A3;line-height:1.35}
+.ph-s--sm{margin-top:6px;color:#737373}
+.ph-step{display:flex;align-items:center;gap:8px;font-size:.72rem;color:#fff}
+.ph-step span{width:20px;height:20px;display:grid;place-items:center;border:1px solid #3D3D3D;color:#737373;font-family:var(--font-mono);font-size:.6rem;flex:none}
+.ph-btn{margin-top:4px;padding:.55rem;text-align:center;font-weight:700;font-size:.72rem;background:#fff;color:#0A0A0A;border:1px solid #fff;border-radius:2px}
+.ph-btn--ghost{background:transparent;color:#fff;border-color:#3D3D3D}
+.ph-input{padding:.5rem;font-size:.72rem;color:#737373;border:1px solid #3D3D3D;border-radius:2px}
+@media (min-width:768px){ .steps--phones{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s-5)} .steps--phones .step{grid-template-columns:1fr;border:0} }
+@media (max-width:767px){ .steps--phones .step .phone{order:-1} }
+.pix__key{word-break:break-all}
+
+/* Rodape */
+.logo span{white-space:nowrap}
+.foot{display:grid;gap:var(--s-5);grid-template-columns:1fr 1fr}
+.foot__brand{grid-column:1/-1;display:flex;flex-direction:column;gap:var(--s-2)}
+.foot__col{display:flex;flex-direction:column;gap:.55rem}
+.foot__col .badge{align-self:flex-start;margin-bottom:.2rem}
+.foot__col a{color:var(--ink-2);font-size:var(--step--1);transition:color .2s}
+.foot__col a:hover{color:var(--ink)}
+@media (min-width:768px){ .foot{grid-template-columns:2fr 1fr 1fr} .foot__brand{grid-column:auto} }
+.foot__hash{margin-top:var(--s-5);color:var(--ink-3);font-size:var(--step--1)}
+.foot__hash summary{cursor:pointer;list-style:none}
+.foot__hash summary::-webkit-details-marker{display:none}
+.foot__hash summary::after{content:' +';font-family:var(--font-mono)}
+.foot__hash[open] summary::after{content:' −'}
+.foot__hash code{display:block;margin-top:.5rem;word-break:break-all;font-size:.75rem;color:var(--ink-2)}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="header" data-header>
+  <div class="wrap header__inner">
+    <a href="#top" class="logo">Projetor<span>MLAB SOLUCTION</span></a>
+    <nav class="nav">
+      <a href="#instalar">Instalar</a>
+      <a href="#controle">Controle</a>
+      <a href="#remover">Remover</a>
+      <a href="#faq">Dúvidas</a>
+      <a href="#apoie">Apoie</a>
+    </nav>
+    <button class="nav-toggle" data-nav-toggle aria-label="Abrir menu" aria-expanded="false"><span></span></button>
+  </div>
+</header>
+<nav class="nav-mobile" data-nav-mobile>
+  <a href="#instalar">Instalar</a>
+  <a href="#controle">Controle</a>
+  <a href="#remover">Remover</a>
+  <a href="#faq">Dúvidas</a>
+  <a href="#apoie">Apoie</a>
+</nav>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="section hero" style="padding-top:calc(var(--header-h) + var(--section-y))">
+    <div class="wrap hero__grid">
+      <div>
+        <p class="eyebrow" data-reveal>PARA HY300 E PARECIDOS</p>
+        <h1 class="display" data-reveal data-reveal-delay="80">Tela nova e controle no celular</h1>
+        <p class="lead" style="margin-top:var(--s-4)" data-reveal data-reveal-delay="160">Grátis e volta ao original quando quiser</p>
+        <div class="btn-row" style="margin-top:var(--s-5)" data-reveal data-reveal-delay="240">
+          <a href="#instalar" class="btn btn--primary btn--lg">Como instalar</a>
+        </div>
+      </div>
+      <figure class="shot shot--hero" data-reveal data-reveal-delay="200">
+        <img src="passos/06-tela-inicial.webp" width="1280" height="720" alt="Nova tela inicial do projetor" fetchpriority="high">
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ INSTALAR ============ -->
+  <section class="section" id="instalar">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>INSTALAR</p>
+      <h2 data-reveal>Escolha um jeito</h2>
+
+      <div data-tabs style="margin-top:var(--s-5)">
+        <div class="tabs__list" role="tablist" aria-label="Jeitos de instalar">
+          <button class="tabs__tab" role="tab" aria-controls="p-projetor" id="tab-projetor">No projetor</button>
+          <button class="tabs__tab" role="tab" aria-controls="p-celular" id="tab-celular">Android</button>
+          <button class="tabs__tab" role="tab" aria-controls="p-claude" id="tab-claude">Claude Code</button>
+        </div>
+
+        <!-- ---------- No projetor ---------- -->
+        <div class="tabs__panel" role="tabpanel" id="p-projetor" aria-labelledby="tab-projetor">
+          <div class="method-head">
+            <p class="muted">Com um pendrive e o controle do projetor</p>
+            <a href="downloads/Projetor.apk" class="btn btn--ghost" download>Baixar APK</a>
+          </div>
+          <ol class="steps">
+            <li class="step">
+              <div class="step__text">
+                <h3>Copie o APK num pendrive</h3>
+                <p class="subtle">Sem pendrive? Instale o <b>Downloader</b> pela Play Store do projetor e digite <span class="url url--inline" data-short-url>este-site/apk</span></p>
+              </div>
+              <figure class="shot shot--art" aria-label="Ilustração: pendrive ligado no projetor"><svg viewBox="0 0 320 180" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="150" y="50" width="140" height="80" rx="6"/><circle cx="250" cy="90" r="22"/><circle cx="250" cy="90" r="10"/><path d="M170 72h40M170 86h30"/><rect x="150" y="96" width="14" height="10"/>
+  <rect x="30" y="82" width="62" height="34" rx="4"/><path d="M92 90h18v18H92"/><path d="M118 99h22" stroke-dasharray="4 5"/><path d="M134 93l8 6-8 6"/>
+</svg></figure>
+            </li>
+            <li class="step">
+              <div class="step__text"><h3>Abra Arquivos</h3></div>
+              <figure class="shot"><img src="passos/01-tela-original.webp" width="1280" height="720" loading="lazy" alt="Tela de fábrica com o atalho Arquivos"></figure>
+            </li>
+            <li class="step">
+              <div class="step__text"><h3>File → pendrive → Projetor.apk</h3></div>
+              <figure class="shot"><img src="passos/03-arquivo-apk.webp" width="1280" height="720" loading="lazy" alt="Arquivo Projetor.apk selecionado"></figure>
+            </li>
+            <li class="step">
+              <div class="step__text"><h3>Instalar</h3></div>
+              <figure class="shot"><img src="passos/04-instalar.webp" width="588" height="196" loading="lazy" alt="Pergunta de instalação com o botão Instalar"></figure>
+            </li>
+            <li class="step">
+              <div class="step__text"><h3>Abrir</h3><p class="subtle">Pronto, ele vira a tela inicial</p></div>
+              <figure class="shot"><img src="passos/05-instalado.webp" width="588" height="196" loading="lazy" alt="App instalada, com o botão Abrir"></figure>
+            </li>
+          </ol>
+        </div>
+
+        <!-- ---------- Android ---------- -->
+        <div class="tabs__panel" role="tabpanel" id="p-celular" aria-labelledby="tab-celular">
+          <div class="method-head">
+            <p class="muted">Pelo celular, no mesmo Wi‑Fi do projetor</p>
+            <a href="downloads/ProjetorInstalador.apk" class="btn btn--ghost" download>Baixar instalador</a>
+          </div>
+          <ol class="steps steps--phones">
+            <li class="step"><div class="step__text"><h3>Abra e toque em Procurar</h3><p class="subtle">Antes, <a href="#adb" data-open-adb>ligue o ADB no projetor</a>. Se o Android pedir, permita instalar desta fonte</p></div><figure class="phone" aria-label="Ilustração da tela do instalador"><div class="phone__screen"><p class="ph-t">Instalar o Projetor</p><p class="ph-s">Tela nova e controle pelo celular</p><div class="ph-step"><span>1</span>Mesmo Wi‑Fi</div><div class="ph-step"><span>2</span>Depuração USB ligada</div><div class="ph-btn">Procurar projetor</div><p class="ph-s ph-s--sm">Ou digite o IP</p><div class="ph-input">192.168.0.20</div><div class="ph-btn ph-btn--ghost">Conectar</div></div></figure></li>
+            <li class="step"><div class="step__text"><h3>Instalar o Projetor</h3><p class="subtle">No projetor, aceite "Permitir depuração?"</p></div><figure class="phone" aria-label="Ilustração da tela do instalador"><div class="phone__screen"><p class="ph-t">Projetor encontrado</p><p class="ph-b">HY300 (Android 11)</p><p class="ph-s">O app vira a tela inicial. A de fábrica continua lá</p><div class="ph-btn">Instalar o Projetor</div><div class="ph-btn ph-btn--ghost">Cancelar</div></div></figure></li>
+            <li class="step"><div class="step__text"><h3>Pronto</h3><p class="subtle">Desligue o ADB no fim</p></div><figure class="phone" aria-label="Ilustração da tela do instalador"><div class="phone__screen"><p class="ph-t">Pronto</p><p class="ph-b">O Projetor já é a tela inicial</p><p class="ph-s">Recomendado: desligue o acesso ADB</p><div class="ph-btn">Desligar o acesso ADB</div><div class="ph-btn ph-btn--ghost">Deixar ligado</div></div></figure></li>
+          </ol>
+        </div>
+
+        <!-- ---------- Claude Code ---------- -->
+        <div class="tabs__panel" role="tabpanel" id="p-claude" aria-labelledby="tab-claude">
+          <div class="method-head">
+            <p class="muted">Pelo computador, com o <a href="https://claude.com/claude-code" target="_blank" rel="noopener">Claude Code</a></p>
+          </div>
+          <ol class="steps steps--plain">
+            <li class="step"><div class="step__text"><h3>Ligue o ADB no projetor</h3><p class="subtle"><a href="#adb" data-open-adb>Como ligar</a></p></div></li>
+            <li class="step"><div class="step__text"><h3>Cole no Claude Code</h3>
+              <div class="prompt">
+                <pre id="prompt-text" tabindex="0">CARREGANDO</pre>
+                <button type="button" class="btn btn--primary" data-copy="prompt-text">Copiar</button>
+              </div>
+            </div></li>
+            <li class="step"><div class="step__text"><h3>Confirme quando pedir</h3><p class="subtle">No projetor, aceite "Permitir depuração?"</p></div></li>
+          </ol>
+          <p class="subtle" style="margin-top:var(--s-4)">Sem IA: <a href="downloads/projetor-kit-pc.zip" download>kit para Windows</a></p>
+        </div>
+      </div>
+
+      <div data-accordion style="margin-top:var(--s-6)" id="adb">
+        <div class="acc__item">
+          <button class="acc__trigger" aria-expanded="false" aria-controls="adb-p">Como ligar o ADB no projetor<span class="acc__icon"></span></button>
+          <div class="acc__panel" id="adb-p"><div>
+            <ol class="steps steps--adb">
+              <li class="step"><div class="step__text"><h3>Definições → Preferências do dispositivo</h3></div><figure class="shot shot--tall"><img src="passos/adb-1-preferencias.webp" width="560" height="720" loading="lazy" alt="Definições → Preferências do dispositivo"></figure></li>
+              <li class="step"><div class="step__text"><h3>Acerca de</h3></div><figure class="shot shot--tall"><img src="passos/adb-2-acerca.webp" width="560" height="720" loading="lazy" alt="Acerca de"></figure></li>
+              <li class="step"><div class="step__text"><h3>Compilação: OK 7 vezes</h3></div><figure class="shot shot--tall"><img src="passos/adb-3-compilacao.webp" width="560" height="720" loading="lazy" alt="Compilação: OK 7 vezes"></figure></li>
+              <li class="step"><div class="step__text"><h3>Opções de programador → Depuração USB</h3></div><figure class="shot shot--tall"><img src="passos/adb-4-depuracao.webp" width="560" height="720" loading="lazy" alt="Opções de programador → Depuração USB"></figure></li>
+            </ol>
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTROLE ============ -->
+  <section class="section" id="controle">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>CONTROLE</p>
+      <h2 data-reveal>Use o celular</h2>
+      <ol class="steps">
+        <li class="step">
+          <div class="step__text"><h3>Aperte Celular</h3><p class="subtle">Na barra de baixo do projetor</p></div>
+          <figure class="shot"><img src="passos/06-tela-inicial.webp" width="1280" height="720" loading="lazy" alt="Botão Celular na barra de baixo"></figure>
+        </li>
+        <li class="step">
+          <div class="step__text"><h3>Aponte a câmera</h3><p class="subtle">Mesmo Wi‑Fi, iPhone ou Android</p></div>
+          <figure class="shot"><img src="passos/07-qr-celular.webp" width="1280" height="720" loading="lazy" alt="QR code do controle na tela do projetor"></figure>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ REMOVER ============ -->
+  <section class="section" id="remover">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>REMOVER</p>
+      <h2 data-reveal>Voltar ao original</h2>
+      <ol class="steps">
+        <li class="step">
+          <div class="step__text"><h3>Ajustes → Voltar à tela original</h3></div>
+          <figure class="shot"><img src="passos/08-menu-ajustes.webp" width="1280" height="720" loading="lazy" alt="Menu Ajustes"></figure>
+        </li>
+        <li class="step">
+          <div class="step__text"><h3>Remover</h3><p class="subtle">Seus apps continuam lá</p></div>
+          <figure class="shot"><img src="passos/09-remover.webp" width="1280" height="720" loading="lazy" alt="Confirmação para remover o app"></figure>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="section" id="faq">
+    <div class="wrap wrap--narrow">
+      <p class="eyebrow" data-reveal>DÚVIDAS</p>
+      <div data-accordion data-accordion-single style="margin-top:var(--s-4)">
+        <div class="acc__item">
+          <button class="acc__trigger" aria-expanded="false" aria-controls="faq-1">Meu projetor é compatível?<span class="acc__icon"></span></button>
+          <div class="acc__panel" id="faq-1"><div><p>HY300 e parecidos com Android 11. Se não for, aparece "App não instalado" e nada muda</p></div></div>
+        </div>
+        <div class="acc__item">
+          <button class="acc__trigger" aria-expanded="false" aria-controls="faq-2">Funciona com iPhone?<span class="acc__icon"></span></button>
+          <div class="acc__panel" id="faq-2"><div><p>Sim, como controle, pelo Safari</p></div></div>
+        </div>
+        <div class="acc__item">
+          <button class="acc__trigger" aria-expanded="false" aria-controls="faq-3">É seguro?<span class="acc__icon"></span></button>
+          <div class="acc__panel" id="faq-3"><div><p>O controle só funciona no Wi‑Fi de casa e pede um PIN de 6 dígitos só do seu projetor</p></div></div>
+        </div>
+        <div class="acc__item">
+          <button class="acc__trigger" aria-expanded="false" aria-controls="faq-4">O celular não conecta<span class="acc__icon"></span></button>
+          <div class="acc__panel" id="faq-4"><div><p>Use o mesmo Wi‑Fi (não os dados móveis) e abra o QR de novo</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ APOIE ============ -->
+  <section class="section" id="apoie" data-invert>
+    <div class="wrap pix">
+      <div>
+        <p class="eyebrow" data-reveal>APOIE</p>
+        <h2 data-reveal>Gostou? Mande um Pix</h2>
+        <p class="subtle" style="margin-top:var(--s-4)">Chave: <b class="pix__key">81f210cf-f1fe-42b5-8fda-ba0b97971ee9</b></p>
+        <pre id="pix-code" class="pix__code">00020126580014br.gov.bcb.pix013681f210cf-f1fe-42b5-8fda-ba0b97971ee95204000053039865802BR5914MLAB SOLUCTION6006BRASIL62070503***6304971D</pre>
+        <div class="btn-row" style="margin-top:var(--s-3)"><button type="button" class="btn btn--primary" data-copy="pix-code">Copiar Pix</button></div>
+      </div>
+      <figure class="pix__qr" data-reveal><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 53 53" shape-rendering="crispEdges" role="img" aria-label="QR code do Pix"><rect width="100%" height="100%" fill="#fff"/><path d="M2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM5 2h1v1h-1zM6 2h1v1h-1zM7 2h1v1h-1zM8 2h1v1h-1zM11 2h1v1h-1zM12 2h1v1h-1zM16 2h1v1h-1zM20 2h1v1h-1zM22 2h1v1h-1zM23 2h1v1h-1zM32 2h1v1h-1zM35 2h1v1h-1zM37 2h1v1h-1zM42 2h1v1h-1zM44 2h1v1h-1zM45 2h1v1h-1zM46 2h1v1h-1zM47 2h1v1h-1zM48 2h1v1h-1zM49 2h1v1h-1zM50 2h1v1h-1zM2 3h1v1h-1zM8 3h1v1h-1zM11 3h1v1h-1zM16 3h1v1h-1zM17 3h1v1h-1zM19 3h1v1h-1zM24 3h1v1h-1zM25 3h1v1h-1zM26 3h1v1h-1zM27 3h1v1h-1zM29 3h1v1h-1zM32 3h1v1h-1zM33 3h1v1h-1zM36 3h1v1h-1zM38 3h1v1h-1zM40 3h1v1h-1zM41 3h1v1h-1zM42 3h1v1h-1zM44 3h1v1h-1zM50 3h1v1h-1zM2 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM8 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM14 4h1v1h-1zM15 4h1v1h-1zM16 4h1v1h-1zM17 4h1v1h-1zM18 4h1v1h-1zM19 4h1v1h-1zM20 4h1v1h-1zM21 4h1v1h-1zM23 4h1v1h-1zM25 4h1v1h-1zM26 4h1v1h-1zM28 4h1v1h-1zM32 4h1v1h-1zM34 4h1v1h-1zM35 4h1v1h-1zM37 4h1v1h-1zM41 4h1v1h-1zM42 4h1v1h-1zM44 4h1v1h-1zM46 4h1v1h-1zM47 4h1v1h-1zM48 4h1v1h-1zM50 4h1v1h-1zM2 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM8 5h1v1h-1zM10 5h1v1h-1zM13 5h1v1h-1zM14 5h1v1h-1zM16 5h1v1h-1zM17 5h1v1h-1zM18 5h1v1h-1zM19 5h1v1h-1zM21 5h1v1h-1zM23 5h1v1h-1zM24 5h1v1h-1zM26 5h1v1h-1zM35 5h1v1h-1zM36 5h1v1h-1zM38 5h1v1h-1zM41 5h1v1h-1zM44 5h1v1h-1zM46 5h1v1h-1zM47 5h1v1h-1zM48 5h1v1h-1zM50 5h1v1h-1zM2 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM13 6h1v1h-1zM14 6h1v1h-1zM15 6h1v1h-1zM17 6h1v1h-1zM18 6h1v1h-1zM19 6h1v1h-1zM23 6h1v1h-1zM24 6h1v1h-1zM25 6h1v1h-1zM26 6h1v1h-1zM27 6h1v1h-1zM28 6h1v1h-1zM30 6h1v1h-1zM31 6h1v1h-1zM32 6h1v1h-1zM34 6h1v1h-1zM35 6h1v1h-1zM37 6h1v1h-1zM38 6h1v1h-1zM39 6h1v1h-1zM44 6h1v1h-1zM46 6h1v1h-1zM47 6h1v1h-1zM48 6h1v1h-1zM50 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM13 7h1v1h-1zM15 7h1v1h-1zM17 7h1v1h-1zM19 7h1v1h-1zM21 7h1v1h-1zM23 7h1v1h-1zM24 7h1v1h-1zM28 7h1v1h-1zM29 7h1v1h-1zM35 7h1v1h-1zM36 7h1v1h-1zM39 7h1v1h-1zM40 7h1v1h-1zM44 7h1v1h-1zM50 7h1v1h-1zM2 8h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h1v1h-1zM30 8h1v1h-1zM32 8h1v1h-1zM34 8h1v1h-1zM36 8h1v1h-1zM38 8h1v1h-1zM40 8h1v1h-1zM42 8h1v1h-1zM44 8h1v1h-1zM45 8h1v1h-1zM46 8h1v1h-1zM47 8h1v1h-1zM48 8h1v1h-1zM49 8h1v1h-1zM50 8h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM13 9h1v1h-1zM14 9h1v1h-1zM15 9h1v1h-1zM17 9h1v1h-1zM18 9h1v1h-1zM20 9h1v1h-1zM24 9h1v1h-1zM28 9h1v1h-1zM29 9h1v1h-1zM30 9h1v1h-1zM32 9h1v1h-1zM34 9h1v1h-1zM41 9h1v1h-1zM42 9h1v1h-1zM2 10h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM13 10h1v1h-1zM15 10h1v1h-1zM17 10h1v1h-1zM24 10h1v1h-1zM25 10h1v1h-1zM26 10h1v1h-1zM27 10h1v1h-1zM28 10h1v1h-1zM33 10h1v1h-1zM35 10h1v1h-1zM37 10h1v1h-1zM38 10h1v1h-1zM40 10h1v1h-1zM42 10h1v1h-1zM44 10h1v1h-1zM45 10h1v1h-1zM46 10h1v1h-1zM47 10h1v1h-1zM48 10h1v1h-1zM2 11h1v1h-1zM4 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM10 11h1v1h-1zM15 11h1v1h-1zM17 11h1v1h-1zM20 11h1v1h-1zM21 11h1v1h-1zM25 11h1v1h-1zM26 11h1v1h-1zM32 11h1v1h-1zM39 11h1v1h-1zM41 11h1v1h-1zM44 11h1v1h-1zM3 12h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1zM13 12h1v1h-1zM14 12h1v1h-1zM15 12h1v1h-1zM16 12h1v1h-1zM17 12h1v1h-1zM19 12h1v1h-1zM22 12h1v1h-1zM23 12h1v1h-1zM24 12h1v1h-1zM26 12h1v1h-1zM27 12h1v1h-1zM28 12h1v1h-1zM29 12h1v1h-1zM31 12h1v1h-1zM35 12h1v1h-1zM36 12h1v1h-1zM37 12h1v1h-1zM38 12h1v1h-1zM40 12h1v1h-1zM41 12h1v1h-1zM43 12h1v1h-1zM49 12h1v1h-1zM50 12h1v1h-1zM4 13h1v1h-1zM6 13h1v1h-1zM9 13h1v1h-1zM11 13h1v1h-1zM13 13h1v1h-1zM17 13h1v1h-1zM20 13h1v1h-1zM23 13h1v1h-1zM25 13h1v1h-1zM27 13h1v1h-1zM30 13h1v1h-1zM32 13h1v1h-1zM34 13h1v1h-1zM35 13h1v1h-1zM37 13h1v1h-1zM41 13h1v1h-1zM44 13h1v1h-1zM45 13h1v1h-1zM46 13h1v1h-1zM47 13h1v1h-1zM49 13h1v1h-1zM2 14h1v1h-1zM4 14h1v1h-1zM6 14h1v1h-1zM8 14h1v1h-1zM9 14h1v1h-1zM11 14h1v1h-1zM12 14h1v1h-1zM13 14h1v1h-1zM16 14h1v1h-1zM18 14h1v1h-1zM19 14h1v1h-1zM20 14h1v1h-1zM24 14h1v1h-1zM26 14h1v1h-1zM27 14h1v1h-1zM32 14h1v1h-1zM33 14h1v1h-1zM37 14h1v1h-1zM38 14h1v1h-1zM42 14h1v1h-1zM43 14h1v1h-1zM44 14h1v1h-1zM48 14h1v1h-1zM50 14h1v1h-1zM3 15h1v1h-1zM5 15h1v1h-1zM7 15h1v1h-1zM9 15h1v1h-1zM10 15h1v1h-1zM13 15h1v1h-1zM15 15h1v1h-1zM16 15h1v1h-1zM17 15h1v1h-1zM19 15h1v1h-1zM20 15h1v1h-1zM21 15h1v1h-1zM22 15h1v1h-1zM24 15h1v1h-1zM27 15h1v1h-1zM31 15h1v1h-1zM32 15h1v1h-1zM34 15h1v1h-1zM35 15h1v1h-1zM41 15h1v1h-1zM44 15h1v1h-1zM45 15h1v1h-1zM47 15h1v1h-1zM48 15h1v1h-1zM49 15h1v1h-1zM4 16h1v1h-1zM8 16h1v1h-1zM10 16h1v1h-1zM11 16h1v1h-1zM12 16h1v1h-1zM13 16h1v1h-1zM14 16h1v1h-1zM16 16h1v1h-1zM17 16h1v1h-1zM19 16h1v1h-1zM20 16h1v1h-1zM22 16h1v1h-1zM23 16h1v1h-1zM24 16h1v1h-1zM25 16h1v1h-1zM28 16h1v1h-1zM29 16h1v1h-1zM30 16h1v1h-1zM31 16h1v1h-1zM32 16h1v1h-1zM33 16h1v1h-1zM34 16h1v1h-1zM36 16h1v1h-1zM38 16h1v1h-1zM39 16h1v1h-1zM40 16h1v1h-1zM41 16h1v1h-1zM43 16h1v1h-1zM46 16h1v1h-1zM50 16h1v1h-1zM3 17h1v1h-1zM5 17h1v1h-1zM6 17h1v1h-1zM7 17h1v1h-1zM13 17h1v1h-1zM21 17h1v1h-1zM22 17h1v1h-1zM24 17h1v1h-1zM25 17h1v1h-1zM27 17h1v1h-1zM29 17h1v1h-1zM31 17h1v1h-1zM35 17h1v1h-1zM37 17h1v1h-1zM41 17h1v1h-1zM42 17h1v1h-1zM43 17h1v1h-1zM44 17h1v1h-1zM46 17h1v1h-1zM50 17h1v1h-1zM2 18h1v1h-1zM3 18h1v1h-1zM4 18h1v1h-1zM6 18h1v1h-1zM8 18h1v1h-1zM9 18h1v1h-1zM10 18h1v1h-1zM11 18h1v1h-1zM14 18h1v1h-1zM16 18h1v1h-1zM18 18h1v1h-1zM20 18h1v1h-1zM21 18h1v1h-1zM23 18h1v1h-1zM26 18h1v1h-1zM30 18h1v1h-1zM33 18h1v1h-1zM35 18h1v1h-1zM38 18h1v1h-1zM39 18h1v1h-1zM40 18h1v1h-1zM42 18h1v1h-1zM45 18h1v1h-1zM47 18h1v1h-1zM50 18h1v1h-1zM7 19h1v1h-1zM12 19h1v1h-1zM13 19h1v1h-1zM15 19h1v1h-1zM16 19h1v1h-1zM17 19h1v1h-1zM19 19h1v1h-1zM20 19h1v1h-1zM21 19h1v1h-1zM23 19h1v1h-1zM24 19h1v1h-1zM25 19h1v1h-1zM26 19h1v1h-1zM27 19h1v1h-1zM29 19h1v1h-1zM30 19h1v1h-1zM31 19h1v1h-1zM33 19h1v1h-1zM35 19h1v1h-1zM41 19h1v1h-1zM43 19h1v1h-1zM44 19h1v1h-1zM45 19h1v1h-1zM47 19h1v1h-1zM50 19h1v1h-1zM3 20h1v1h-1zM6 20h1v1h-1zM7 20h1v1h-1zM8 20h1v1h-1zM10 20h1v1h-1zM12 20h1v1h-1zM16 20h1v1h-1zM18 20h1v1h-1zM20 20h1v1h-1zM22 20h1v1h-1zM23 20h1v1h-1zM25 20h1v1h-1zM26 20h1v1h-1zM30 20h1v1h-1zM32 20h1v1h-1zM36 20h1v1h-1zM37 20h1v1h-1zM38 20h1v1h-1zM40 20h1v1h-1zM41 20h1v1h-1zM47 20h1v1h-1zM49 20h1v1h-1zM50 20h1v1h-1zM2 21h1v1h-1zM6 21h1v1h-1zM7 21h1v1h-1zM10 21h1v1h-1zM11 21h1v1h-1zM12 21h1v1h-1zM14 21h1v1h-1zM19 21h1v1h-1zM23 21h1v1h-1zM25 21h1v1h-1zM27 21h1v1h-1zM28 21h1v1h-1zM29 21h1v1h-1zM32 21h1v1h-1zM36 21h1v1h-1zM37 21h1v1h-1zM45 21h1v1h-1zM46 21h1v1h-1zM47 21h1v1h-1zM49 21h1v1h-1zM4 22h1v1h-1zM5 22h1v1h-1zM6 22h1v1h-1zM7 22h1v1h-1zM8 22h1v1h-1zM9 22h1v1h-1zM10 22h1v1h-1zM11 22h1v1h-1zM12 22h1v1h-1zM13 22h1v1h-1zM14 22h1v1h-1zM15 22h1v1h-1zM16 22h1v1h-1zM17 22h1v1h-1zM18 22h1v1h-1zM20 22h1v1h-1zM21 22h1v1h-1zM22 22h1v1h-1zM24 22h1v1h-1zM26 22h1v1h-1zM28 22h1v1h-1zM31 22h1v1h-1zM33 22h1v1h-1zM35 22h1v1h-1zM36 22h1v1h-1zM38 22h1v1h-1zM42 22h1v1h-1zM44 22h1v1h-1zM48 22h1v1h-1zM50 22h1v1h-1zM2 23h1v1h-1zM4 23h1v1h-1zM6 23h1v1h-1zM11 23h1v1h-1zM13 23h1v1h-1zM14 23h1v1h-1zM15 23h1v1h-1zM18 23h1v1h-1zM19 23h1v1h-1zM23 23h1v1h-1zM25 23h1v1h-1zM27 23h1v1h-1zM28 23h1v1h-1zM31 23h1v1h-1zM32 23h1v1h-1zM33 23h1v1h-1zM37 23h1v1h-1zM38 23h1v1h-1zM41 23h1v1h-1zM44 23h1v1h-1zM49 23h1v1h-1zM3 24h1v1h-1zM4 24h1v1h-1zM5 24h1v1h-1zM6 24h1v1h-1zM7 24h1v1h-1zM8 24h1v1h-1zM9 24h1v1h-1zM10 24h1v1h-1zM11 24h1v1h-1zM12 24h1v1h-1zM15 24h1v1h-1zM16 24h1v1h-1zM17 24h1v1h-1zM18 24h1v1h-1zM19 24h1v1h-1zM20 24h1v1h-1zM23 24h1v1h-1zM24 24h1v1h-1zM25 24h1v1h-1zM26 24h1v1h-1zM27 24h1v1h-1zM28 24h1v1h-1zM35 24h1v1h-1zM36 24h1v1h-1zM37 24h1v1h-1zM38 24h1v1h-1zM39 24h1v1h-1zM40 24h1v1h-1zM42 24h1v1h-1zM43 24h1v1h-1zM44 24h1v1h-1zM45 24h1v1h-1zM46 24h1v1h-1zM47 24h1v1h-1zM48 24h1v1h-1zM50 24h1v1h-1zM2 25h1v1h-1zM3 25h1v1h-1zM6 25h1v1h-1zM10 25h1v1h-1zM13 25h1v1h-1zM14 25h1v1h-1zM15 25h1v1h-1zM17 25h1v1h-1zM18 25h1v1h-1zM20 25h1v1h-1zM23 25h1v1h-1zM24 25h1v1h-1zM28 25h1v1h-1zM30 25h1v1h-1zM33 25h1v1h-1zM34 25h1v1h-1zM35 25h1v1h-1zM41 25h1v1h-1zM42 25h1v1h-1zM46 25h1v1h-1zM47 25h1v1h-1zM50 25h1v1h-1zM2 26h1v1h-1zM3 26h1v1h-1zM4 26h1v1h-1zM5 26h1v1h-1zM6 26h1v1h-1zM8 26h1v1h-1zM10 26h1v1h-1zM11 26h1v1h-1zM12 26h1v1h-1zM13 26h1v1h-1zM15 26h1v1h-1zM16 26h1v1h-1zM19 26h1v1h-1zM21 26h1v1h-1zM22 26h1v1h-1zM23 26h1v1h-1zM24 26h1v1h-1zM26 26h1v1h-1zM28 26h1v1h-1zM29 26h1v1h-1zM31 26h1v1h-1zM32 26h1v1h-1zM37 26h1v1h-1zM38 26h1v1h-1zM40 26h1v1h-1zM42 26h1v1h-1zM44 26h1v1h-1zM46 26h1v1h-1zM47 26h1v1h-1zM48 26h1v1h-1zM50 26h1v1h-1zM4 27h1v1h-1zM5 27h1v1h-1zM6 27h1v1h-1zM10 27h1v1h-1zM12 27h1v1h-1zM13 27h1v1h-1zM14 27h1v1h-1zM18 27h1v1h-1zM23 27h1v1h-1zM24 27h1v1h-1zM28 27h1v1h-1zM30 27h1v1h-1zM32 27h1v1h-1zM33 27h1v1h-1zM35 27h1v1h-1zM38 27h1v1h-1zM41 27h1v1h-1zM42 27h1v1h-1zM46 27h1v1h-1zM47 27h1v1h-1zM2 28h1v1h-1zM3 28h1v1h-1zM6 28h1v1h-1zM7 28h1v1h-1zM8 28h1v1h-1zM9 28h1v1h-1zM10 28h1v1h-1zM12 28h1v1h-1zM13 28h1v1h-1zM14 28h1v1h-1zM17 28h1v1h-1zM18 28h1v1h-1zM22 28h1v1h-1zM24 28h1v1h-1zM25 28h1v1h-1zM26 28h1v1h-1zM27 28h1v1h-1zM28 28h1v1h-1zM31 28h1v1h-1zM35 28h1v1h-1zM36 28h1v1h-1zM39 28h1v1h-1zM40 28h1v1h-1zM42 28h1v1h-1zM43 28h1v1h-1zM44 28h1v1h-1zM45 28h1v1h-1zM46 28h1v1h-1zM48 28h1v1h-1zM49 28h1v1h-1zM50 28h1v1h-1zM4 29h1v1h-1zM6 29h1v1h-1zM11 29h1v1h-1zM13 29h1v1h-1zM18 29h1v1h-1zM23 29h1v1h-1zM24 29h1v1h-1zM26 29h1v1h-1zM29 29h1v1h-1zM30 29h1v1h-1zM32 29h1v1h-1zM34 29h1v1h-1zM43 29h1v1h-1zM47 29h1v1h-1zM50 29h1v1h-1zM6 30h1v1h-1zM8 30h1v1h-1zM9 30h1v1h-1zM10 30h1v1h-1zM11 30h1v1h-1zM13 30h1v1h-1zM14 30h1v1h-1zM16 30h1v1h-1zM17 30h1v1h-1zM21 30h1v1h-1zM23 30h1v1h-1zM26 30h1v1h-1zM31 30h1v1h-1zM35 30h1v1h-1zM37 30h1v1h-1zM38 30h1v1h-1zM40 30h1v1h-1zM41 30h1v1h-1zM42 30h1v1h-1zM43 30h1v1h-1zM44 30h1v1h-1zM45 30h1v1h-1zM46 30h1v1h-1zM48 30h1v1h-1zM50 30h1v1h-1zM2 31h1v1h-1zM3 31h1v1h-1zM4 31h1v1h-1zM7 31h1v1h-1zM9 31h1v1h-1zM15 31h1v1h-1zM16 31h1v1h-1zM20 31h1v1h-1zM23 31h1v1h-1zM25 31h1v1h-1zM29 31h1v1h-1zM31 31h1v1h-1zM32 31h1v1h-1zM34 31h1v1h-1zM38 31h1v1h-1zM39 31h1v1h-1zM41 31h1v1h-1zM42 31h1v1h-1zM43 31h1v1h-1zM48 31h1v1h-1zM49 31h1v1h-1zM2 32h1v1h-1zM3 32h1v1h-1zM4 32h1v1h-1zM5 32h1v1h-1zM7 32h1v1h-1zM8 32h1v1h-1zM9 32h1v1h-1zM12 32h1v1h-1zM14 32h1v1h-1zM16 32h1v1h-1zM19 32h1v1h-1zM20 32h1v1h-1zM21 32h1v1h-1zM29 32h1v1h-1zM32 32h1v1h-1zM33 32h1v1h-1zM35 32h1v1h-1zM37 32h1v1h-1zM38 32h1v1h-1zM41 32h1v1h-1zM42 32h1v1h-1zM44 32h1v1h-1zM46 32h1v1h-1zM47 32h1v1h-1zM50 32h1v1h-1zM3 33h1v1h-1zM4 33h1v1h-1zM5 33h1v1h-1zM7 33h1v1h-1zM9 33h1v1h-1zM12 33h1v1h-1zM14 33h1v1h-1zM15 33h1v1h-1zM18 33h1v1h-1zM19 33h1v1h-1zM23 33h1v1h-1zM24 33h1v1h-1zM25 33h1v1h-1zM27 33h1v1h-1zM28 33h1v1h-1zM32 33h1v1h-1zM33 33h1v1h-1zM34 33h1v1h-1zM37 33h1v1h-1zM40 33h1v1h-1zM43 33h1v1h-1zM47 33h1v1h-1zM50 33h1v1h-1zM3 34h1v1h-1zM4 34h1v1h-1zM8 34h1v1h-1zM10 34h1v1h-1zM11 34h1v1h-1zM12 34h1v1h-1zM13 34h1v1h-1zM14 34h1v1h-1zM16 34h1v1h-1zM17 34h1v1h-1zM18 34h1v1h-1zM20 34h1v1h-1zM23 34h1v1h-1zM26 34h1v1h-1zM27 34h1v1h-1zM29 34h1v1h-1zM31 34h1v1h-1zM32 34h1v1h-1zM35 34h1v1h-1zM38 34h1v1h-1zM40 34h1v1h-1zM41 34h1v1h-1zM42 34h1v1h-1zM44 34h1v1h-1zM45 34h1v1h-1zM46 34h1v1h-1zM48 34h1v1h-1zM3 35h1v1h-1zM5 35h1v1h-1zM6 35h1v1h-1zM7 35h1v1h-1zM9 35h1v1h-1zM11 35h1v1h-1zM14 35h1v1h-1zM17 35h1v1h-1zM19 35h1v1h-1zM21 35h1v1h-1zM23 35h1v1h-1zM24 35h1v1h-1zM25 35h1v1h-1zM26 35h1v1h-1zM27 35h1v1h-1zM32 35h1v1h-1zM33 35h1v1h-1zM34 35h1v1h-1zM35 35h1v1h-1zM41 35h1v1h-1zM42 35h1v1h-1zM47 35h1v1h-1zM49 35h1v1h-1zM50 35h1v1h-1zM5 36h1v1h-1zM6 36h1v1h-1zM7 36h1v1h-1zM8 36h1v1h-1zM10 36h1v1h-1zM11 36h1v1h-1zM12 36h1v1h-1zM15 36h1v1h-1zM17 36h1v1h-1zM19 36h1v1h-1zM22 36h1v1h-1zM23 36h1v1h-1zM25 36h1v1h-1zM29 36h1v1h-1zM31 36h1v1h-1zM32 36h1v1h-1zM33 36h1v1h-1zM36 36h1v1h-1zM40 36h1v1h-1zM41 36h1v1h-1zM42 36h1v1h-1zM44 36h1v1h-1zM45 36h1v1h-1zM46 36h1v1h-1zM47 36h1v1h-1zM49 36h1v1h-1zM50 36h1v1h-1zM2 37h1v1h-1zM3 37h1v1h-1zM5 37h1v1h-1zM6 37h1v1h-1zM7 37h1v1h-1zM9 37h1v1h-1zM10 37h1v1h-1zM11 37h1v1h-1zM12 37h1v1h-1zM14 37h1v1h-1zM15 37h1v1h-1zM18 37h1v1h-1zM19 37h1v1h-1zM20 37h1v1h-1zM21 37h1v1h-1zM23 37h1v1h-1zM24 37h1v1h-1zM25 37h1v1h-1zM27 37h1v1h-1zM28 37h1v1h-1zM32 37h1v1h-1zM37 37h1v1h-1zM43 37h1v1h-1zM47 37h1v1h-1zM49 37h1v1h-1zM50 37h1v1h-1zM3 38h1v1h-1zM4 38h1v1h-1zM5 38h1v1h-1zM6 38h1v1h-1zM8 38h1v1h-1zM9 38h1v1h-1zM10 38h1v1h-1zM11 38h1v1h-1zM13 38h1v1h-1zM14 38h1v1h-1zM15 38h1v1h-1zM16 38h1v1h-1zM19 38h1v1h-1zM20 38h1v1h-1zM21 38h1v1h-1zM22 38h1v1h-1zM23 38h1v1h-1zM25 38h1v1h-1zM28 38h1v1h-1zM33 38h1v1h-1zM36 38h1v1h-1zM38 38h1v1h-1zM41 38h1v1h-1zM42 38h1v1h-1zM43 38h1v1h-1zM44 38h1v1h-1zM45 38h1v1h-1zM46 38h1v1h-1zM48 38h1v1h-1zM50 38h1v1h-1zM2 39h1v1h-1zM6 39h1v1h-1zM7 39h1v1h-1zM9 39h1v1h-1zM13 39h1v1h-1zM17 39h1v1h-1zM18 39h1v1h-1zM23 39h1v1h-1zM24 39h1v1h-1zM26 39h1v1h-1zM27 39h1v1h-1zM29 39h1v1h-1zM32 39h1v1h-1zM41 39h1v1h-1zM42 39h1v1h-1zM43 39h1v1h-1zM44 39h1v1h-1zM48 39h1v1h-1zM49 39h1v1h-1zM3 40h1v1h-1zM7 40h1v1h-1zM8 40h1v1h-1zM9 40h1v1h-1zM13 40h1v1h-1zM15 40h1v1h-1zM20 40h1v1h-1zM24 40h1v1h-1zM25 40h1v1h-1zM26 40h1v1h-1zM27 40h1v1h-1zM30 40h1v1h-1zM33 40h1v1h-1zM34 40h1v1h-1zM35 40h1v1h-1zM36 40h1v1h-1zM38 40h1v1h-1zM39 40h1v1h-1zM40 40h1v1h-1zM42 40h1v1h-1zM44 40h1v1h-1zM46 40h1v1h-1zM50 40h1v1h-1zM3 41h1v1h-1zM4 41h1v1h-1zM5 41h1v1h-1zM9 41h1v1h-1zM10 41h1v1h-1zM11 41h1v1h-1zM13 41h1v1h-1zM14 41h1v1h-1zM18 41h1v1h-1zM19 41h1v1h-1zM23 41h1v1h-1zM30 41h1v1h-1zM31 41h1v1h-1zM32 41h1v1h-1zM34 41h1v1h-1zM36 41h1v1h-1zM37 41h1v1h-1zM39 41h1v1h-1zM45 41h1v1h-1zM50 41h1v1h-1zM2 42h1v1h-1zM3 42h1v1h-1zM4 42h1v1h-1zM8 42h1v1h-1zM10 42h1v1h-1zM14 42h1v1h-1zM16 42h1v1h-1zM18 42h1v1h-1zM19 42h1v1h-1zM21 42h1v1h-1zM22 42h1v1h-1zM24 42h1v1h-1zM25 42h1v1h-1zM26 42h1v1h-1zM27 42h1v1h-1zM28 42h1v1h-1zM29 42h1v1h-1zM31 42h1v1h-1zM33 42h1v1h-1zM38 42h1v1h-1zM39 42h1v1h-1zM41 42h1v1h-1zM42 42h1v1h-1zM43 42h1v1h-1zM44 42h1v1h-1zM45 42h1v1h-1zM46 42h1v1h-1zM47 42h1v1h-1zM48 42h1v1h-1zM50 42h1v1h-1zM10 43h1v1h-1zM13 43h1v1h-1zM14 43h1v1h-1zM15 43h1v1h-1zM16 43h1v1h-1zM18 43h1v1h-1zM23 43h1v1h-1zM24 43h1v1h-1zM28 43h1v1h-1zM32 43h1v1h-1zM34 43h1v1h-1zM37 43h1v1h-1zM38 43h1v1h-1zM41 43h1v1h-1zM42 43h1v1h-1zM46 43h1v1h-1zM47 43h1v1h-1zM49 43h1v1h-1zM2 44h1v1h-1zM3 44h1v1h-1zM4 44h1v1h-1zM5 44h1v1h-1zM6 44h1v1h-1zM7 44h1v1h-1zM8 44h1v1h-1zM11 44h1v1h-1zM12 44h1v1h-1zM15 44h1v1h-1zM17 44h1v1h-1zM22 44h1v1h-1zM23 44h1v1h-1zM24 44h1v1h-1zM26 44h1v1h-1zM28 44h1v1h-1zM29 44h1v1h-1zM30 44h1v1h-1zM31 44h1v1h-1zM35 44h1v1h-1zM36 44h1v1h-1zM37 44h1v1h-1zM40 44h1v1h-1zM42 44h1v1h-1zM44 44h1v1h-1zM46 44h1v1h-1zM47 44h1v1h-1zM50 44h1v1h-1zM2 45h1v1h-1zM8 45h1v1h-1zM10 45h1v1h-1zM16 45h1v1h-1zM19 45h1v1h-1zM21 45h1v1h-1zM23 45h1v1h-1zM24 45h1v1h-1zM28 45h1v1h-1zM30 45h1v1h-1zM31 45h1v1h-1zM33 45h1v1h-1zM34 45h1v1h-1zM36 45h1v1h-1zM37 45h1v1h-1zM42 45h1v1h-1zM46 45h1v1h-1zM47 45h1v1h-1zM49 45h1v1h-1zM50 45h1v1h-1zM2 46h1v1h-1zM4 46h1v1h-1zM5 46h1v1h-1zM6 46h1v1h-1zM8 46h1v1h-1zM10 46h1v1h-1zM11 46h1v1h-1zM13 46h1v1h-1zM14 46h1v1h-1zM18 46h1v1h-1zM20 46h1v1h-1zM23 46h1v1h-1zM24 46h1v1h-1zM25 46h1v1h-1zM26 46h1v1h-1zM27 46h1v1h-1zM28 46h1v1h-1zM31 46h1v1h-1zM33 46h1v1h-1zM38 46h1v1h-1zM40 46h1v1h-1zM41 46h1v1h-1zM42 46h1v1h-1zM43 46h1v1h-1zM44 46h1v1h-1zM45 46h1v1h-1zM46 46h1v1h-1zM48 46h1v1h-1zM50 46h1v1h-1zM2 47h1v1h-1zM4 47h1v1h-1zM5 47h1v1h-1zM6 47h1v1h-1zM8 47h1v1h-1zM10 47h1v1h-1zM12 47h1v1h-1zM13 47h1v1h-1zM14 47h1v1h-1zM16 47h1v1h-1zM17 47h1v1h-1zM18 47h1v1h-1zM19 47h1v1h-1zM20 47h1v1h-1zM21 47h1v1h-1zM22 47h1v1h-1zM24 47h1v1h-1zM25 47h1v1h-1zM29 47h1v1h-1zM30 47h1v1h-1zM31 47h1v1h-1zM32 47h1v1h-1zM33 47h1v1h-1zM34 47h1v1h-1zM37 47h1v1h-1zM38 47h1v1h-1zM39 47h1v1h-1zM42 47h1v1h-1zM43 47h1v1h-1zM44 47h1v1h-1zM45 47h1v1h-1zM46 47h1v1h-1zM50 47h1v1h-1zM2 48h1v1h-1zM4 48h1v1h-1zM5 48h1v1h-1zM6 48h1v1h-1zM8 48h1v1h-1zM10 48h1v1h-1zM14 48h1v1h-1zM15 48h1v1h-1zM16 48h1v1h-1zM18 48h1v1h-1zM22 48h1v1h-1zM23 48h1v1h-1zM26 48h1v1h-1zM27 48h1v1h-1zM30 48h1v1h-1zM32 48h1v1h-1zM33 48h1v1h-1zM34 48h1v1h-1zM35 48h1v1h-1zM38 48h1v1h-1zM39 48h1v1h-1zM41 48h1v1h-1zM47 48h1v1h-1zM48 48h1v1h-1zM2 49h1v1h-1zM8 49h1v1h-1zM12 49h1v1h-1zM15 49h1v1h-1zM16 49h1v1h-1zM18 49h1v1h-1zM19 49h1v1h-1zM21 49h1v1h-1zM22 49h1v1h-1zM23 49h1v1h-1zM25 49h1v1h-1zM26 49h1v1h-1zM29 49h1v1h-1zM31 49h1v1h-1zM33 49h1v1h-1zM34 49h1v1h-1zM35 49h1v1h-1zM36 49h1v1h-1zM40 49h1v1h-1zM41 49h1v1h-1zM44 49h1v1h-1zM46 49h1v1h-1zM47 49h1v1h-1zM50 49h1v1h-1zM2 50h1v1h-1zM3 50h1v1h-1zM4 50h1v1h-1zM5 50h1v1h-1zM6 50h1v1h-1zM7 50h1v1h-1zM8 50h1v1h-1zM10 50h1v1h-1zM12 50h1v1h-1zM19 50h1v1h-1zM21 50h1v1h-1zM22 50h1v1h-1zM23 50h1v1h-1zM26 50h1v1h-1zM27 50h1v1h-1zM30 50h1v1h-1zM38 50h1v1h-1zM40 50h1v1h-1zM41 50h1v1h-1zM43 50h1v1h-1zM48 50h1v1h-1zM49 50h1v1h-1zM50 50h1v1h-1z" fill="#000"/></svg><figcaption class="subtle">App do banco → Pix → Ler QR</figcaption></figure>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="foot">
+      <div class="foot__brand">
+        <a href="#top" class="logo">Projetor<span>MLAB SOLUCTION</span></a>
+        <p class="subtle">Tela nova e controle no celular para o seu projetor</p>
+      </div>
+      <nav class="foot__col" aria-label="Seções">
+        <p class="badge">Guia</p>
+        <a href="#instalar">Instalar</a><a href="#controle">Controle</a><a href="#remover">Remover</a><a href="#faq">Dúvidas</a><a href="#apoie">Apoie</a>
+      </nav>
+      <div class="foot__col">
+        <p class="badge">Downloads</p>
+        <a href="downloads/Projetor.apk" download>Projetor · v4.4.0</a>
+        <a href="downloads/ProjetorInstalador.apk" download>Instalador Android · v1.0.0</a>
+        <a href="downloads/projetor-kit-pc.zip" download>Kit para Windows</a>
+      </div>
+    </div>
+    <details class="foot__hash"><summary>Conferir o arquivo (SHA-256)</summary><code>cddb60c3c04894e7774b85d6544d400ccce45c7f0d4269db3a946e5b6c454a25</code></details>
+    <div class="footer__bottom">
+      <span>&copy; <span data-year></span> MLAB SOLUCTION</span>
+      <span>Sem vínculo com os fabricantes · Sem garantia</span>
+    </div>
+  </div>
+</footer>
+
+<script type="text/plain" id="prompt-tpl">
+Quero instalar o app "Projetor" no meu projetor Android (HY300 ou parecido), que está ligado e no mesmo Wi-Fi deste computador. Fale comigo em português simples, explique cada passo e peça minha confirmação antes de alterar qualquer coisa no projetor.
+
+1. Veja se o ADB (Android Platform Tools) está instalado. Se não estiver, peça permissão e baixe somente do site oficial do Google: https://dl.google.com/android/repository/platform-tools-latest-<windows|darwin|linux>.zip (use a versão do meu sistema).
+2. Encontre o projetor: procure na rede local aparelhos com a porta 5555 aberta, conecte com "adb connect IP:5555" e me mostre o modelo (getprop ro.product.model), o fabricante e a versão do Android. Se houver mais de um, pergunte qual é o meu. Se o estado ficar "unauthorized", me peça para aceitar o aviso "Permitir depuração" na tela do projetor com o controle.
+3. Baixe o app de __ORIGEM__/downloads/Projetor.apk e confira o SHA-256. Ele precisa ser cddb60c3c04894e7774b85d6544d400ccce45c7f0d4269db3a946e5b6c454a25. Se for diferente, pare e me avise.
+4. Antes de instalar, anote e me mostre como o projetor está: a tela inicial padrão (cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME) e a configuração enabled_accessibility_services.
+5. Instale com "adb install -r Projetor.apk". Se aparecer INSTALL_FAILED_SHARED_USER_INCOMPATIBLE, me explique que o sistema deste projetor não é compatível com o app, pare e não altere mais nada.
+6. Se instalar, abra o app com "adb shell am start -n com.mlab.projetor/.HomeActivity". Ele se define sozinho como tela inicial e desliga o modo mouse do fabricante. Confirme que a tela inicial padrão agora é com.mlab.projetor e me diga que o controle pelo celular aparece no botão "Celular" da tela do projetor.
+7. No final, pergunte se pode desligar o acesso ADB ("adb shell settings put global adb_enabled 0") e explique que isso deixa o projetor mais seguro. Para remover o app no futuro, não precisa de computador: Ajustes → "Voltar à tela original e remover o app", na tela do projetor.
+
+Não desinstale, desative nem apague nenhum outro app, arquivo ou configuração do projetor além do que está nesta lista.
+</script>
+<script>
+/* ============================================================
+   MLAB runtime — comportamento dirigido por atributos data-*.
+   Escreva a marcação; o comportamento vem junto.
+   Referência completa: references/interacoes.md
+   ============================================================ */
+(function(){
+  'use strict';
+  var RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $  = function(s,c){return (c||document).querySelector(s)};
+  var $$ = function(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s))};
+
+  /* ---- ano corrente ---- */
+  $$('[data-year]').forEach(function(el){ el.textContent = new Date().getFullYear() });
+
+  /* ---- header: estado de scroll ---- */
+  var header = $('[data-header]');
+  if(header){
+    var onScroll = function(){ header.classList.toggle('is-scrolled', window.scrollY > 20) };
+    onScroll(); addEventListener('scroll', onScroll, {passive:true});
+  }
+
+  /* ---- menu mobile ---- */
+  var navToggle = $('[data-nav-toggle]'), navMobile = $('[data-nav-mobile]');
+  if(navToggle && navMobile){
+    var setNav = function(open){
+      document.body.classList.toggle('nav-open', open);
+      navToggle.setAttribute('aria-expanded', String(open));
+      navToggle.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+    };
+    navToggle.addEventListener('click', function(){ setNav(!document.body.classList.contains('nav-open')) });
+    $$('a', navMobile).forEach(function(a){ a.addEventListener('click', function(){ setNav(false) }) });
+    addEventListener('keydown', function(e){ if(e.key === 'Escape') setNav(false) });
+  }
+
+  /* ---- reveal on scroll ---- */
+  var reveals = $$('[data-reveal]');
+  if(reveals.length){
+    if(RM || !('IntersectionObserver' in window)){
+      reveals.forEach(function(el){ el.classList.add('is-in') });
+    } else {
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if(!en.isIntersecting) return;
+          var d = parseInt(en.target.dataset.revealDelay || 0, 10);
+          setTimeout(function(){ en.target.classList.add('is-in') }, d);
+          io.unobserve(en.target);
+        });
+      }, {threshold:.12, rootMargin:'0px 0px -8% 0px'});
+      reveals.forEach(function(el){ io.observe(el) });
+    }
+  }
+
+  /* ---- contadores animados ----
+     data-count="1200" data-count-prefix="R$ " data-count-suffix="+" data-count-decimals="0" */
+  function formatNum(v, dec){
+    return v.toLocaleString('pt-BR', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  }
+  function runCount(el){
+    var target = parseFloat(el.dataset.count);
+    var dec    = parseInt(el.dataset.countDecimals || 0, 10);
+    var pre    = el.dataset.countPrefix || '';
+    var suf    = el.dataset.countSuffix || '';
+    if(RM){ el.textContent = pre + formatNum(target, dec) + suf; return }
+    var dur = parseInt(el.dataset.countDuration || 1400, 10), t0 = null;
+    function step(ts){
+      if(t0 === null) t0 = ts;
+      var p = Math.min((ts - t0) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = pre + formatNum(target * eased, dec) + suf;
+      if(p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  var counters = $$('[data-count]');
+  if(counters.length){
+    if(!('IntersectionObserver' in window)){ counters.forEach(runCount) }
+    else {
+      var ioC = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){ if(en.isIntersecting){ runCount(en.target); ioC.unobserve(en.target) } });
+      }, {threshold:.5});
+      counters.forEach(function(el){ ioC.observe(el) });
+    }
+  }
+
+  /* ---- accordion ----
+     [data-accordion] > .acc__item > button.acc__trigger + .acc__panel
+     data-accordion-single: abre um por vez */
+  $$('[data-accordion]').forEach(function(acc){
+    var single = acc.hasAttribute('data-accordion-single');
+    $$('.acc__trigger', acc).forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var item = btn.closest('.acc__item');
+        var open = !item.classList.contains('is-open');
+        if(single) $$('.acc__item', acc).forEach(function(i){
+          i.classList.remove('is-open');
+          var b = $('.acc__trigger', i); if(b) b.setAttribute('aria-expanded','false');
+        });
+        item.classList.toggle('is-open', open);
+        btn.setAttribute('aria-expanded', String(open));
+      });
+    });
+  });
+
+  /* ---- tabs ---- */
+  $$('[data-tabs]').forEach(function(root){
+    var tabs   = $$('[role="tab"]', root);
+    var panels = $$('[role="tabpanel"]', root);
+    function select(i){
+      tabs.forEach(function(t,j){ t.setAttribute('aria-selected', String(j===i)); t.tabIndex = j===i ? 0 : -1 });
+      panels.forEach(function(p,j){ p.hidden = j !== i });
+    }
+    tabs.forEach(function(t,i){
+      t.addEventListener('click', function(){ select(i) });
+      t.addEventListener('keydown', function(e){
+        var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if(!d) return;
+        e.preventDefault();
+        var n = (i + d + tabs.length) % tabs.length;
+        select(n); tabs[n].focus();
+      });
+    });
+    select(0);
+  });
+
+  /* ---- carrossel (scroll-snap nativo + botões) ---- */
+  $$('[data-carousel]').forEach(function(root){
+    var track = $('.carousel__track', root);
+    var prev  = $('[data-carousel-prev]', root);
+    var next  = $('[data-carousel-next]', root);
+    if(!track) return;
+    function stepSize(){
+      var slide = $('.carousel__slide', track);
+      return slide ? slide.offsetWidth + 24 : track.clientWidth * .8;
+    }
+    function sync(){
+      if(!prev || !next) return;
+      prev.disabled = track.scrollLeft < 8;
+      next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 8;
+    }
+    if(prev) prev.addEventListener('click', function(){ track.scrollBy({left:-stepSize(), behavior: RM ? 'auto' : 'smooth'}) });
+    if(next) next.addEventListener('click', function(){ track.scrollBy({left: stepSize(), behavior: RM ? 'auto' : 'smooth'}) });
+    track.addEventListener('scroll', sync, {passive:true});
+    addEventListener('resize', sync);
+    sync();
+  });
+
+  /* ---- modal (dialog nativo) ----
+     <button data-modal-open="demo">  <dialog id="demo"> ... <button data-modal-close> */
+  $$('[data-modal-open]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var dlg = document.getElementById(btn.dataset.modalOpen);
+      if(dlg && dlg.showModal) dlg.showModal();
+    });
+  });
+  $$('dialog').forEach(function(dlg){
+    $$('[data-modal-close]', dlg).forEach(function(b){ b.addEventListener('click', function(){ dlg.close() }) });
+    dlg.addEventListener('click', function(e){ if(e.target === dlg) dlg.close() });
+  });
+
+  /* ---- toggle mensal/anual ----
+     Troca html[data-billing]; o CSS revela [data-price="monthly"|"annual"]. */
+  $$('[data-billing-toggle] button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var plan = btn.dataset.plan;
+      document.documentElement.setAttribute('data-billing', plan);
+      $$('[data-billing-toggle] button').forEach(function(b){ b.setAttribute('aria-pressed', String(b === btn)) });
+    });
+  });
+
+  /* ---- máscaras BR ---- data-mask="phone|cpf|cnpj|cep|currency" */
+  var masks = {
+    phone: function(v){ v = v.replace(/\D/g,'').slice(0,11);
+      if(v.length <= 10) return v.replace(/(\d{0,2})(\d{0,4})(\d{0,4})/, function(_,a,b,c){ return (a?'('+a:'')+(a.length===2?') ':'')+b+(c?'-'+c:'') }).trim();
+      return v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3'); },
+    cpf: function(v){ v = v.replace(/\D/g,'').slice(0,11);
+      return v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2'); },
+    cnpj: function(v){ v = v.replace(/\D/g,'').slice(0,14);
+      return v.replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d{1,2})$/,'$1-$2'); },
+    cep: function(v){ v = v.replace(/\D/g,'').slice(0,8); return v.replace(/(\d{5})(\d{1,3})/,'$1-$2') },
+    currency: function(v){ v = v.replace(/\D/g,''); if(!v) return '';
+      return (parseInt(v,10)/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}) }
+  };
+  $$('[data-mask]').forEach(function(input){
+    var fn = masks[input.dataset.mask];
+    if(!fn) return;
+    input.addEventListener('input', function(){ input.value = fn(input.value) });
+  });
+
+  /* ---- formulário: validação + envio + estados ----
+     <form data-form data-endpoint="https://..."> ... </form>
+     Cada .field pode ter <p class="field__error">mensagem</p>. */
+  function validateField(field){
+    var input = $('input,select,textarea', field);
+    if(!input) return true;
+    var v = input.value.trim(), ok = true;
+    if(input.required && !v) ok = false;
+    if(ok && v && input.type === 'email') ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+    if(ok && v && input.dataset.mask === 'phone') ok = v.replace(/\D/g,'').length >= 10;
+    field.classList.toggle('is-invalid', !ok);
+    return ok;
+  }
+  $$('[data-form]').forEach(function(form){
+    var status = $('.form__status', form);
+    var submit = $('[type="submit"]', form);
+    var submitLabel = submit ? submit.innerHTML : '';
+
+    $$('.field', form).forEach(function(field){
+      var input = $('input,select,textarea', field);
+      if(input) input.addEventListener('blur', function(){ if(field.classList.contains('is-invalid')) validateField(field) });
+    });
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var fields = $$('.field', form);
+      var valid = fields.map(validateField).every(Boolean);
+      if(!valid){ var bad = $('.field.is-invalid input,.field.is-invalid select,.field.is-invalid textarea', form); if(bad) bad.focus(); return }
+
+      if(submit){ submit.disabled = true; submit.innerHTML = '<span class="spinner"></span> Enviando' }
+      var data = Object.fromEntries(new FormData(form).entries());
+      var endpoint = form.dataset.endpoint;
+
+      var done = function(okMsg){
+        form.reset();
+        if(status){ status.textContent = okMsg; status.classList.add('is-visible') }
+        if(submit){ submit.disabled = false; submit.innerHTML = submitLabel }
+      };
+      var fail = function(){
+        if(status){ status.textContent = 'Não conseguimos enviar agora. Tente de novo em instantes.'; status.classList.add('is-visible') }
+        if(submit){ submit.disabled = false; submit.innerHTML = submitLabel }
+      };
+
+      if(!endpoint){
+        console.info('[MLAB] Sem data-endpoint — envio simulado. Dados:', data);
+        setTimeout(function(){ done('Recebemos seus dados. Entraremos em contato em breve.') }, 600);
+        return;
+      }
+      fetch(endpoint, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)})
+        .then(function(r){ r.ok ? done('Recebemos seus dados. Entraremos em contato em breve.') : fail() })
+        .catch(fail);
+    });
+  });
+})();
+</script>
+<script>
+/* Projetor: escolha de método, endereço curto e copiar o texto do Claude Code. */
+(function(){
+  'use strict';
+  var origin = location.protocol.indexOf('http') === 0 ? location.origin : 'https://ENDERECO-DO-SITE';
+  var host = origin.replace(/^https?:\/\//, '');
+
+  // Endereco curto para digitar no navegador do projetor.
+  Array.prototype.forEach.call(document.querySelectorAll('[data-short-url]'), function (el) { el.textContent = host + '/apk'; });
+
+  // Texto pronto do Claude Code, com o endereco real deste site.
+  var pre = document.getElementById('prompt-text');
+  var tpl = document.getElementById('prompt-tpl');
+  if (pre && tpl) pre.textContent = tpl.textContent.trim().replace(/__ORIGEM__/g, origin);
+
+  // Botoes que abrem um metodo: ativam a aba e rolam ate ela.
+  Array.prototype.forEach.call(document.querySelectorAll('[data-goto]'), function (b) {
+    b.addEventListener('click', function () {
+      var tab = document.getElementById(b.getAttribute('data-goto'));
+      if (!tab) return;
+      tab.click();
+      document.getElementById('instalar').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      setTimeout(function () { tab.focus({ preventScroll: true }); }, 400);
+    });
+  });
+
+
+  // Bolinhas embaixo dos passos que deslizam no celular (mostram em qual cartao esta).
+  Array.prototype.forEach.call(document.querySelectorAll('.steps'), function (list) {
+    var items = list.querySelectorAll('.step');
+    if (items.length < 2) return;
+    var dots = document.createElement('div');
+    dots.className = 'dots'; dots.setAttribute('aria-hidden', 'true');
+    for (var i = 0; i < items.length; i++) dots.appendChild(document.createElement('span'));
+    list.parentNode.insertBefore(dots, list.nextSibling);
+    function update() {
+      if (!list.clientWidth) return; // aba ou painel escondido: calcula quando aparecer
+      var w = items[0].getBoundingClientRect().width || 1;
+      var idx = Math.round(list.scrollLeft / (w + 12));
+      if (list.scrollLeft + list.clientWidth >= list.scrollWidth - 4) idx = items.length - 1;
+      for (var k = 0; k < dots.children.length; k++) dots.children[k].className = k === idx ? 'on' : '';
+    }
+    list.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    // Troca de aba ou abrir o "Como ligar o ADB": recalcula quando o conteudo aparece.
+    document.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('[role=tab],.acc__trigger,[data-goto],[data-open-adb]')) setTimeout(update, 60);
+    });
+    update();
+  });
+
+  // "Como ligar" abre o passo a passo do ADB.
+  Array.prototype.forEach.call(document.querySelectorAll('[data-open-adb]'), function (a) {
+    a.addEventListener('click', function () {
+      var t = document.querySelector('#adb .acc__trigger');
+      if (t && t.getAttribute('aria-expanded') !== 'true') t.click();
+    });
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-copy]'), function (b) {
+    var label = b.textContent;
+    b.addEventListener('click', function () {
+      var src = document.getElementById(b.getAttribute('data-copy'));
+      var text = src ? src.textContent : '';
+      var done = function () { b.textContent = 'Copiado'; setTimeout(function () { b.textContent = label; }, 2000); };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else fallback();
+      function fallback() {
+        var r = document.createRange(); r.selectNodeContents(src);
+        var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+        try { document.execCommand('copy'); s.removeAllRanges(); done(); } catch (e) { b.textContent = 'Selecionado: copie'; }
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

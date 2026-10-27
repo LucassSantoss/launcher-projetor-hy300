@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-billing="monthly">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TÍTULO DA PÁGINA — MLAB</title>
+<meta name="description" content="DESCRIÇÃO EM ATÉ 155 CARACTERES.">
+<meta property="og:title" content="TÍTULO DA PÁGINA — MLAB">
+<meta property="og:description" content="DESCRIÇÃO EM ATÉ 155 CARACTERES.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0A0A0A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   MLAB — tokens
+   Paleta estritamente monocromática. Hierarquia vem de inversão
+   de seção, peso tipográfico, contraste em degraus e movimento.
+   ============================================================ */
+:root{
+  /* superfícies e tinta — trocam de valor dentro de [data-invert] */
+  --paper:#0A0A0A; --paper-2:#121212; --paper-3:#1A1A1A;
+  --ink:#FFFFFF;   --ink-2:#A3A3A3;   --ink-3:#737373;
+  --line:#262626;  --line-2:#3D3D3D;
+
+  /* tipografia */
+  --font-display:'Space Grotesk',system-ui,sans-serif;
+  --font-body:'Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:ui-monospace,'SF Mono',Menlo,monospace;
+
+  --step--1:clamp(.78rem,.75rem + .15vw,.85rem);
+  --step-0: clamp(1rem,.96rem + .2vw,1.0625rem);
+  --step-1: clamp(1.15rem,1.05rem + .45vw,1.375rem);
+  --step-2: clamp(1.5rem,1.3rem + .9vw,2rem);
+  --step-3: clamp(2rem,1.55rem + 2vw,3rem);
+  --step-4: clamp(2.5rem,1.7rem + 3.5vw,4.5rem);
+  --step-5: clamp(3rem,1.8rem + 5.2vw,6.5rem);
+
+  /* espaço */
+  --s-1:.5rem; --s-2:.75rem; --s-3:1rem; --s-4:1.5rem;
+  --s-5:2rem;  --s-6:3rem;   --s-7:4rem; --s-8:6rem;
+  --gutter:clamp(1.25rem,4vw,2.5rem);
+  --section-y:clamp(4rem,10vw,8rem);
+  --wrap:1200px;
+  --wrap-narrow:720px;
+  --header-h:72px;
+
+  --radius:2px;              /* a marca é angular: raio quase zero */
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+
+/* Inversão: o recurso de hierarquia mais forte do sistema.
+   Todo componente usa var(--ink)/var(--paper), então basta trocar os tokens. */
+[data-invert]{
+  --paper:#FAFAFA; --paper-2:#F1F1F1; --paper-3:#E7E7E7;
+  --ink:#0A0A0A;   --ink-2:#525252;   --ink-3:#737373;
+  --line:#E2E2E2;  --line-2:#CFCFCF;
+  background:var(--paper); color:var(--ink);
+}
+
+/* ---------- reset ---------- */
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0}
+html{-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:var(--font-body); font-size:var(--step-0);
+  line-height:1.6; -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img,svg,video{display:block;max-width:100%;height:auto}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+[id]{scroll-margin-top:calc(var(--header-h) + 1rem)}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+::selection{background:var(--ink);color:var(--paper)}
+
+/* ---------- layout ---------- */
+.wrap{width:100%;max-width:var(--wrap);margin-inline:auto;padding-inline:var(--gutter)}
+.wrap--narrow{max-width:var(--wrap-narrow)}
+.section{padding-block:var(--section-y);position:relative}
+.section + .section{border-top:1px solid var(--line)}
+[data-invert] + [data-invert]{border-top-color:var(--line)}
+.stack > * + *{margin-top:var(--s-3)}
+.stack-lg > * + *{margin-top:var(--s-5)}
+.grid{display:grid;gap:var(--s-4)}
+@media (min-width:768px){
+  .grid--2{grid-template-columns:repeat(2,1fr)}
+  .grid--3{grid-template-columns:repeat(3,1fr)}
+  .grid--4{grid-template-columns:repeat(2,1fr)}
+}
+@media (min-width:1024px){ .grid--4{grid-template-columns:repeat(4,1fr)} }
+.center{text-align:center}
+.center .eyebrow{justify-content:center}
+
+/* ---------- tipografia ---------- */
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:700;line-height:1.05;letter-spacing:-.02em;text-wrap:balance}
+h1{font-size:var(--step-4)}
+h2{font-size:var(--step-3)}
+h3{font-size:var(--step-1)}
+.display{font-size:var(--step-5);font-family:var(--font-display);font-weight:700;line-height:.95;letter-spacing:-.035em}
+.lead{font-size:var(--step-1);color:var(--ink-2);line-height:1.45;max-width:52ch;text-wrap:pretty}
+.muted{color:var(--ink-2)}
+.subtle{color:var(--ink-3);font-size:var(--step--1)}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:.6rem;
+  font-family:var(--font-mono);font-size:.7rem;font-weight:500;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);
+  margin-bottom:var(--s-3);
+}
+.eyebrow::before{content:'';width:1.75rem;height:1px;background:var(--line-2)}
+.center .eyebrow::after{content:'';width:1.75rem;height:1px;background:var(--line-2)}
+.stat{font-family:var(--font-display);font-size:var(--step-4);font-weight:700;line-height:1;letter-spacing:-.03em}
+
+/* Colchetes do logo: moldura para o elemento mais importante da seção. */
+.bracket{position:relative;padding:var(--s-5)}
+.bracket::before,.bracket::after{
+  content:'';position:absolute;width:28px;height:28px;
+  border:2px solid var(--ink);pointer-events:none;
+}
+.bracket::before{top:0;left:0;border-right:0;border-bottom:0}
+.bracket::after{bottom:0;right:0;border-left:0;border-top:0}
+
+/* ---------- botões ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.6rem;
+  padding:.95rem 1.75rem;border-radius:var(--radius);
+  font-weight:600;font-size:var(--step-0);line-height:1;
+  border:1px solid var(--ink);white-space:nowrap;
+  transition:transform .2s var(--ease),background .2s,color .2s,opacity .2s;
+}
+.btn--primary{background:var(--ink);color:var(--paper)}
+.btn--primary:hover{transform:translateY(-2px)}
+.btn--ghost{background:transparent;color:var(--ink);border-color:var(--line-2)}
+.btn--ghost:hover{border-color:var(--ink)}
+.btn--lg{padding:1.15rem 2.25rem;font-size:var(--step-1)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn-row{display:flex;flex-wrap:wrap;gap:var(--s-3)}
+.center .btn-row{justify-content:center}
+
+/* ---------- cards ---------- */
+.card{
+  background:var(--paper-2);border:1px solid var(--line);
+  border-radius:var(--radius);padding:var(--s-5);
+  transition:border-color .25s,transform .25s var(--ease);
+}
+.card:hover{border-color:var(--line-2);transform:translateY(-3px)}
+.card--flat{background:transparent}
+.card__num{font-family:var(--font-mono);font-size:var(--step--1);color:var(--ink-3);letter-spacing:.1em}
+.badge{
+  display:inline-block;padding:.3rem .7rem;border:1px solid var(--line-2);
+  border-radius:var(--radius);font-family:var(--font-mono);
+  font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);
+}
+.badge--solid{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* ---------- header ---------- */
+.header{
+  position:fixed;inset:0 0 auto;z-index:100;height:var(--header-h);
+  display:flex;align-items:center;
+  border-bottom:1px solid transparent;transition:background .3s,border-color .3s;
+}
+.header.is-scrolled{background:rgba(10,10,10,.85);backdrop-filter:blur(12px);border-bottom-color:var(--line)}
+.header__inner{display:flex;align-items:center;justify-content:space-between;gap:var(--s-4);width:100%}
+.logo{font-family:var(--font-display);font-weight:700;font-size:1.15rem;letter-spacing:-.02em;display:flex;align-items:center;gap:.45rem}
+.logo span{font-family:var(--font-mono);font-size:.7rem;font-weight:500;letter-spacing:.3em;color:var(--ink-2)}
+.nav{display:none;align-items:center;gap:var(--s-5)}
+.nav a{font-size:var(--step--1);color:var(--ink-2);transition:color .2s}
+.nav a:hover{color:var(--ink)}
+@media (min-width:900px){ .nav{display:flex} .nav-toggle{display:none} }
+.nav-toggle{width:44px;height:44px;display:grid;place-items:center;margin-right:-10px}
+.nav-toggle span{display:block;width:22px;height:1.5px;background:var(--ink);position:relative;transition:background .2s}
+.nav-toggle span::before,.nav-toggle span::after{content:'';position:absolute;left:0;width:22px;height:1.5px;background:var(--ink);transition:transform .3s var(--ease)}
+.nav-toggle span::before{top:-7px} .nav-toggle span::after{top:7px}
+body.nav-open .nav-toggle span{background:transparent}
+body.nav-open .nav-toggle span::before{transform:translateY(7px) rotate(45deg)}
+body.nav-open .nav-toggle span::after{transform:translateY(-7px) rotate(-45deg)}
+.nav-mobile{
+  position:fixed;inset:var(--header-h) 0 0;z-index:99;background:var(--paper);
+  display:flex;flex-direction:column;justify-content:center;gap:var(--s-4);
+  padding:var(--gutter);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;
+}
+body.nav-open .nav-mobile{opacity:1;visibility:visible}
+body.nav-open{overflow:hidden}
+.nav-mobile a{font-family:var(--font-display);font-size:var(--step-2);font-weight:700}
+@media (min-width:900px){ .nav-mobile{display:none} }
+
+/* ---------- reveal ---------- */
+[data-reveal]{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+[data-reveal].is-in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  [data-reveal]{opacity:1;transform:none;transition:none}
+  .btn:hover,.card:hover{transform:none}
+}
+
+/* ---------- accordion (FAQ) ---------- */
+.acc__item{border-bottom:1px solid var(--line)}
+.acc__trigger{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--s-4);
+  padding:var(--s-4) 0;text-align:left;font-family:var(--font-display);
+  font-weight:500;font-size:var(--step-1);color:var(--ink);
+}
+.acc__icon{position:relative;flex:0 0 18px;height:18px}
+.acc__icon::before,.acc__icon::after{content:'';position:absolute;inset:50% 0 auto;height:1.5px;background:var(--ink);transition:transform .3s var(--ease)}
+.acc__icon::after{transform:rotate(90deg)}
+.acc__item.is-open .acc__icon::after{transform:rotate(0)}
+.acc__panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease)}
+.acc__item.is-open .acc__panel{grid-template-rows:1fr}
+.acc__panel > div{overflow:hidden}
+.acc__panel p{padding-bottom:var(--s-4);color:var(--ink-2);max-width:65ch}
+
+/* ---------- tabs ---------- */
+.tabs__list{display:flex;gap:var(--s-1);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs__list::-webkit-scrollbar{display:none}
+.tabs__tab{
+  padding:var(--s-3) var(--s-4);white-space:nowrap;color:var(--ink-3);
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s;
+}
+.tabs__tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tabs__panel{padding-top:var(--s-5)}
+.tabs__panel[hidden]{display:none}
+
+/* ---------- carrossel ---------- */
+.carousel__track{
+  display:flex;gap:var(--s-4);overflow-x:auto;scroll-snap-type:x mandatory;
+  scrollbar-width:none;padding-bottom:var(--s-2);
+}
+.carousel__track::-webkit-scrollbar{display:none}
+.carousel__slide{flex:0 0 min(88%,380px);scroll-snap-align:start}
+.carousel__nav{display:flex;gap:var(--s-2);margin-top:var(--s-4)}
+.carousel__btn{
+  width:44px;height:44px;display:grid;place-items:center;
+  border:1px solid var(--line-2);border-radius:var(--radius);transition:border-color .2s,opacity .2s;
+}
+.carousel__btn:hover{border-color:var(--ink)}
+.carousel__btn[disabled]{opacity:.3;pointer-events:none}
+
+/* ---------- preço ---------- */
+.billing-toggle{display:inline-flex;border:1px solid var(--line);border-radius:var(--radius);padding:3px}
+.billing-toggle button{padding:.5rem 1.1rem;font-size:var(--step--1);color:var(--ink-3);border-radius:var(--radius);transition:background .2s,color .2s}
+.billing-toggle button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+[data-price]{display:none}
+[data-billing="monthly"] [data-price="monthly"],
+[data-billing="annual"]  [data-price="annual"]{display:inline}
+
+/* ---------- formulário ---------- */
+.field{display:flex;flex-direction:column;gap:.45rem}
+.field label{font-size:var(--step--1);color:var(--ink-2)}
+.field input,.field select,.field textarea{
+  width:100%;padding:.9rem 1rem;background:var(--paper-2);
+  border:1px solid var(--line);border-radius:var(--radius);
+  transition:border-color .2s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--ink)}
+.field__error{font-size:var(--step--1);color:var(--ink-2);display:none;align-items:center;gap:.4rem}
+.field__error::before{content:'!';font-family:var(--font-mono);font-weight:700;width:1.1em;height:1.1em;display:grid;place-items:center;border:1.5px solid currentColor;border-radius:50%;font-size:.7em}
+/* Sem vermelho: o erro se marca por borda grossa + ícone. */
+.field.is-invalid input,.field.is-invalid select,.field.is-invalid textarea{border-width:2px;border-color:var(--ink)}
+.field.is-invalid .field__error{display:flex}
+.form__status{display:none;padding:var(--s-4);border:1px solid var(--line-2);border-radius:var(--radius);margin-top:var(--s-3)}
+.form__status.is-visible{display:block}
+.spinner{width:1em;height:1em;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- footer ---------- */
+.footer{padding-block:var(--s-7) var(--s-5);border-top:1px solid var(--line)}
+.footer__grid{display:grid;gap:var(--s-5);grid-template-columns:1fr}
+@media (min-width:768px){ .footer__grid{grid-template-columns:2fr 1fr 1fr} }
+.footer__bottom{margin-top:var(--s-6);padding-top:var(--s-4);border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:var(--s-3);justify-content:space-between;color:var(--ink-3);font-size:var(--step--1)}
+
+/* ---------- modal ---------- */
+dialog{
+  border:1px solid var(--line-2);border-radius:var(--radius);
+  background:var(--paper-2);color:var(--ink);
+  padding:var(--s-5);max-width:min(560px,92vw);width:100%;
+}
+dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="header" data-header>
+  <div class="wrap header__inner">
+    <a href="#top" class="logo">M<span>LAB</span></a>
+    <nav class="nav">
+      <a href="#como">Como funciona</a>
+      <a href="#prova">Cases</a>
+      <a href="#faq">Dúvidas</a>
+      <a href="#cta" class="btn btn--primary" style="padding:.7rem 1.35rem">CTA DO HEADER</a>
+    </nav>
+    <button class="nav-toggle" data-nav-toggle aria-label="Abrir menu" aria-expanded="false"><span></span></button>
+  </div>
+</header>
+<nav class="nav-mobile" data-nav-mobile>
+  <a href="#como">Como funciona</a>
+  <a href="#prova">Cases</a>
+  <a href="#faq">Dúvidas</a>
+  <a href="#cta" class="btn btn--primary" style="align-self:flex-start;margin-top:var(--s-3)">CTA DO HEADER</a>
+</nav>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="section" style="padding-top:calc(var(--header-h) + var(--section-y))">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>RÓTULO DA SEÇÃO</p>
+      <h1 class="display" data-reveal data-reveal-delay="80">
+        Promessa concreta em<br>seis a doze palavras
+      </h1>
+      <p class="lead" style="margin-top:var(--s-4)" data-reveal data-reveal-delay="160">
+        Uma frase que explica como isso acontece e para quem serve. Específica, sem jargão.
+      </p>
+      <div class="btn-row" style="margin-top:var(--s-5)" data-reveal data-reveal-delay="240">
+        <a href="#cta" class="btn btn--primary btn--lg">Quero começar</a>
+        <a href="#como" class="btn btn--ghost btn--lg">Como funciona</a>
+      </div>
+
+      <!-- prova social numérica: contadores animam ao entrar na viewport -->
+      <div class="grid grid--3" style="margin-top:var(--s-8);border-top:1px solid var(--line);padding-top:var(--s-5)" data-reveal data-reveal-delay="320">
+        <div><p class="stat" data-count="120" data-count-suffix="+">0</p><p class="subtle">Rótulo da métrica <!-- PLACEHOLDER --></p></div>
+        <div><p class="stat" data-count="98" data-count-suffix="%">0</p><p class="subtle">Rótulo da métrica <!-- PLACEHOLDER --></p></div>
+        <div><p class="stat" data-count="30" data-count-suffix=" dias">0</p><p class="subtle">Rótulo da métrica <!-- PLACEHOLDER --></p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SEÇÃO INVERTIDA (use para o que mais importa) ============ -->
+  <section class="section" id="como" data-invert>
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>COMO FUNCIONA</p>
+      <h2 data-reveal>Três passos, sem mistério</h2>
+      <div class="grid grid--3" style="margin-top:var(--s-6)">
+        <article class="card card--flat" data-reveal><p class="card__num">01</p><h3 style="margin-top:var(--s-2)">Título do passo</h3><p class="muted" style="margin-top:var(--s-2)">Uma ou duas frases explicando o que acontece.</p></article>
+        <article class="card card--flat" data-reveal data-reveal-delay="100"><p class="card__num">02</p><h3 style="margin-top:var(--s-2)">Título do passo</h3><p class="muted" style="margin-top:var(--s-2)">Uma ou duas frases explicando o que acontece.</p></article>
+        <article class="card card--flat" data-reveal data-reveal-delay="200"><p class="card__num">03</p><h3 style="margin-top:var(--s-2)">Título do passo</h3><p class="muted" style="margin-top:var(--s-2)">Uma ou duas frases explicando o que acontece.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="section" id="faq">
+    <div class="wrap wrap--narrow">
+      <p class="eyebrow" data-reveal>DÚVIDAS</p>
+      <h2 data-reveal>Perguntas frequentes</h2>
+      <div data-accordion style="margin-top:var(--s-5)">
+        <div class="acc__item">
+          <button class="acc__trigger" aria-expanded="false" aria-controls="faq-1">Pergunta que o visitante realmente faria<span class="acc__icon"></span></button>
+          <div class="acc__panel" id="faq-1"><div><p>Resposta direta, sem rodeio, respondendo a objeção por trás da pergunta.</p></div></div>
+        </div>
+        <div class="acc__item">
+          <button class="acc__trigger" aria-expanded="false" aria-controls="faq-2">Segunda objeção comum<span class="acc__icon"></span></button>
+          <div class="acc__panel" id="faq-2"><div><p>Resposta direta, sem rodeio.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA FINAL ============ -->
+  <section class="section" id="cta" data-invert>
+    <div class="wrap wrap--narrow center">
+      <div class="bracket" data-reveal>
+        <h2>Última chamada, no imperativo</h2>
+        <p class="lead" style="margin:var(--s-3) auto 0">Uma linha que remove o último atrito: prazo, garantia ou ausência de compromisso.</p>
+        <div class="btn-row" style="margin-top:var(--s-5)"><a href="#" class="btn btn--primary btn--lg">Quero começar</a></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div><a href="#top" class="logo">M<span>LAB</span></a><p class="subtle" style="margin-top:var(--s-3);max-width:34ch">Uma linha sobre o que a MLAB faz.</p></div>
+      <div class="stack"><p class="badge">Navegação</p><a href="#como" class="subtle">Como funciona</a><a href="#faq" class="subtle">Dúvidas</a></div>
+      <div class="stack"><p class="badge">Contato</p><a href="mailto:CONTATO@EXEMPLO.COM" class="subtle">CONTATO@EXEMPLO.COM <!-- PLACEHOLDER --></a></div>
+    </div>
+    <div class="footer__bottom"><span>&copy; <span data-year></span> MLAB</span><span>Todos os direitos reservados</span></div>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   MLAB runtime — comportamento dirigido por atributos data-*.
+   Escreva a marcação; o comportamento vem junto.
+   Referência completa: references/interacoes.md
+   ============================================================ */
+(function(){
+  'use strict';
+  var RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $  = function(s,c){return (c||document).querySelector(s)};
+  var $$ = function(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s))};
+
+  /* ---- ano corrente ---- */
+  $$('[data-year]').forEach(function(el){ el.textContent = new Date().getFullYear() });
+
+  /* ---- header: estado de scroll ---- */
+  var header = $('[data-header]');
+  if(header){
+    var onScroll = function(){ header.classList.toggle('is-scrolled', window.scrollY > 20) };
+    onScroll(); addEventListener('scroll', onScroll, {passive:true});
+  }
+
+  /* ---- menu mobile ---- */
+  var navToggle = $('[data-nav-toggle]'), navMobile = $('[data-nav-mobile]');
+  if(navToggle && navMobile){
+    var setNav = function(open){
+      document.body.classList.toggle('nav-open', open);
+      navToggle.setAttribute('aria-expanded', String(open));
+      navToggle.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+    };
+    navToggle.addEventListener('click', function(){ setNav(!document.body.classList.contains('nav-open')) });
+    $$('a', navMobile).forEach(function(a){ a.addEventListener('click', function(){ setNav(false) }) });
+    addEventListener('keydown', function(e){ if(e.key === 'Escape') setNav(false) });
+  }
+
+  /* ---- reveal on scroll ---- */
+  var reveals = $$('[data-reveal]');
+  if(reveals.length){
+    if(RM || !('IntersectionObserver' in window)){
+      reveals.forEach(function(el){ el.classList.add('is-in') });
+    } else {
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if(!en.isIntersecting) return;
+          var d = parseInt(en.target.dataset.revealDelay || 0, 10);
+          setTimeout(function(){ en.target.classList.add('is-in') }, d);
+          io.unobserve(en.target);
+        });
+      }, {threshold:.12, rootMargin:'0px 0px -8% 0px'});
+      reveals.forEach(function(el){ io.observe(el) });
+    }
+  }
+
+  /* ---- contadores animados ----
+     data-count="1200" data-count-prefix="R$ " data-count-suffix="+" data-count-decimals="0" */
+  function formatNum(v, dec){
+    return v.toLocaleString('pt-BR', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  }
+  function runCount(el){
+    var target = parseFloat(el.dataset.count);
+    var dec    = parseInt(el.dataset.countDecimals || 0, 10);
+    var pre    = el.dataset.countPrefix || '';
+    var suf    = el.dataset.countSuffix || '';
+    if(RM){ el.textContent = pre + formatNum(target, dec) + suf; return }
+    var dur = parseInt(el.dataset.countDuration || 1400, 10), t0 = null;
+    function step(ts){
+      if(t0 === null) t0 = ts;
+      var p = Math.min((ts - t0) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = pre + formatNum(target * eased, dec) + suf;
+      if(p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  var counters = $$('[data-count]');
+  if(counters.length){
+    if(!('IntersectionObserver' in window)){ counters.forEach(runCount) }
+    else {
+      var ioC = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){ if(en.isIntersecting){ runCount(en.target); ioC.unobserve(en.target) } });
+      }, {threshold:.5});
+      counters.forEach(function(el){ ioC.observe(el) });
+    }
+  }
+
+  /* ---- accordion ----
+     [data-accordion] > .acc__item > button.acc__trigger + .acc__panel
+     data-accordion-single: abre um por vez */
+  $$('[data-accordion]').forEach(function(acc){
+    var single = acc.hasAttribute('data-accordion-single');
+    $$('.acc__trigger', acc).forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var item = btn.closest('.acc__item');
+        var open = !item.classList.contains('is-open');
+        if(single) $$('.acc__item', acc).forEach(function(i){
+          i.classList.remove('is-open');
+          var b = $('.acc__trigger', i); if(b) b.setAttribute('aria-expanded','false');
+        });
+        item.classList.toggle('is-open', open);
+        btn.setAttribute('aria-expanded', String(open));
+      });
+    });
+  });
+
+  /* ---- tabs ---- */
+  $$('[data-tabs]').forEach(function(root){
+    var tabs   = $$('[role="tab"]', root);
+    var panels = $$('[role="tabpanel"]', root);
+    function select(i){
+      tabs.forEach(function(t,j){ t.setAttribute('aria-selected', String(j===i)); t.tabIndex = j===i ? 0 : -1 });
+      panels.forEach(function(p,j){ p.hidden = j !== i });
+    }
+    tabs.forEach(function(t,i){
+      t.addEventListener('click', function(){ select(i) });
+      t.addEventListener('keydown', function(e){
+        var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if(!d) return;
+        e.preventDefault();
+        var n = (i + d + tabs.length) % tabs.length;
+        select(n); tabs[n].focus();
+      });
+    });
+    select(0);
+  });
+
+  /* ---- carrossel (scroll-snap nativo + botões) ---- */
+  $$('[data-carousel]').forEach(function(root){
+    var track = $('.carousel__track', root);
+    var prev  = $('[data-carousel-prev]', root);
+    var next  = $('[data-carousel-next]', root);
+    if(!track) return;
+    function stepSize(){
+      var slide = $('.carousel__slide', track);
+      return slide ? slide.offsetWidth + 24 : track.clientWidth * .8;
+    }
+    function sync(){
+      if(!prev || !next) return;
+      prev.disabled = track.scrollLeft < 8;
+      next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 8;
+    }
+    if(prev) prev.addEventListener('click', function(){ track.scrollBy({left:-stepSize(), behavior: RM ? 'auto' : 'smooth'}) });
+    if(next) next.addEventListener('click', function(){ track.scrollBy({left: stepSize(), behavior: RM ? 'auto' : 'smooth'}) });
+    track.addEventListener('scroll', sync, {passive:true});
+    addEventListener('resize', sync);
+    sync();
+  });
+
+  /* ---- modal (dialog nativo) ----
+     <button data-modal-open="demo">  <dialog id="demo"> ... <button data-modal-close> */
+  $$('[data-modal-open]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var dlg = document.getElementById(btn.dataset.modalOpen);
+      if(dlg && dlg.showModal) dlg.showModal();
+    });
+  });
+  $$('dialog').forEach(function(dlg){
+    $$('[data-modal-close]', dlg).forEach(function(b){ b.addEventListener('click', function(){ dlg.close() }) });
+    dlg.addEventListener('click', function(e){ if(e.target === dlg) dlg.close() });
+  });
+
+  /* ---- toggle mensal/anual ----
+     Troca html[data-billing]; o CSS revela [data-price="monthly"|"annual"]. */
+  $$('[data-billing-toggle] button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var plan = btn.dataset.plan;
+      document.documentElement.setAttribute('data-billing', plan);
+      $$('[data-billing-toggle] button').forEach(function(b){ b.setAttribute('aria-pressed', String(b === btn)) });
+    });
+  });
+
+  /* ---- máscaras BR ---- data-mask="phone|cpf|cnpj|cep|currency" */
+  var masks = {
+    phone: function(v){ v = v.replace(/\D/g,'').slice(0,11);
+      if(v.length <= 10) return v.replace(/(\d{0,2})(\d{0,4})(\d{0,4})/, function(_,a,b,c){ return (a?'('+a:'')+(a.length===2?') ':'')+b+(c?'-'+c:'') }).trim();
+      return v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3'); },
+    cpf: function(v){ v = v.replace(/\D/g,'').slice(0,11);
+      return v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2'); },
+    cnpj: function(v){ v = v.replace(/\D/g,'').slice(0,14);
+      return v.replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d{1,2})$/,'$1-$2'); },
+    cep: function(v){ v = v.replace(/\D/g,'').slice(0,8); return v.replace(/(\d{5})(\d{1,3})/,'$1-$2') },
+    currency: function(v){ v = v.replace(/\D/g,''); if(!v) return '';
+      return (parseInt(v,10)/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}) }
+  };
+  $$('[data-mask]').forEach(function(input){
+    var fn = masks[input.dataset.mask];
+    if(!fn) return;
+    input.addEventListener('input', function(){ input.value = fn(input.value) });
+  });
+
+  /* ---- formulário: validação + envio + estados ----
+     <form data-form data-endpoint="https://..."> ... </form>
+     Cada .field pode ter <p class="field__error">mensagem</p>. */
+  function validateField(field){
+    var input = $('input,select,textarea', field);
+    if(!input) return true;
+    var v = input.value.trim(), ok = true;
+    if(input.required && !v) ok = false;
+    if(ok && v && input.type === 'email') ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+    if(ok && v && input.dataset.mask === 'phone') ok = v.replace(/\D/g,'').length >= 10;
+    field.classList.toggle('is-invalid', !ok);
+    return ok;
+  }
+  $$('[data-form]').forEach(function(form){
+    var status = $('.form__status', form);
+    var submit = $('[type="submit"]', form);
+    var submitLabel = submit ? submit.innerHTML : '';
+
+    $$('.field', form).forEach(function(field){
+      var input = $('input,select,textarea', field);
+      if(input) input.addEventListener('blur', function(){ if(field.classList.contains('is-invalid')) validateField(field) });
+    });
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var fields = $$('.field', form);
+      var valid = fields.map(validateField).every(Boolean);
+      if(!valid){ var bad = $('.field.is-invalid input,.field.is-invalid select,.field.is-invalid textarea', form); if(bad) bad.focus(); return }
+
+      if(submit){ submit.disabled = true; submit.innerHTML = '<span class="spinner"></span> Enviando' }
+      var data = Object.fromEntries(new FormData(form).entries());
+      var endpoint = form.dataset.endpoint;
+
+      var done = function(okMsg){
+        form.reset();
+        if(status){ status.textContent = okMsg; status.classList.add('is-visible') }
+        if(submit){ submit.disabled = false; submit.innerHTML = submitLabel }
+      };
+      var fail = function(){
+        if(status){ status.textContent = 'Não conseguimos enviar agora. Tente de novo em instantes.'; status.classList.add('is-visible') }
+        if(submit){ submit.disabled = false; submit.innerHTML = submitLabel }
+      };
+
+      if(!endpoint){
+        console.info('[MLAB] Sem data-endpoint — envio simulado. Dados:', data);
+        setTimeout(function(){ done('Recebemos seus dados. Entraremos em contato em breve.') }, 600);
+        return;
+      }
+      fetch(endpoint, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)})
+        .then(function(r){ r.ok ? done('Recebemos seus dados. Entraremos em contato em breve.') : fail() })
+        .catch(fail);
+    });
+  });
+})();
+</script>
+</body>
+</html>

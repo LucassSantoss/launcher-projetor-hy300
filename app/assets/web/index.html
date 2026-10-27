@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Projetor">
+<meta name="theme-color" content="#0B0D16">
+<title>Projetor</title>
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="icon" type="image/png" href="/icon.png">
+<style>
+@font-face{font-family:Inter;src:url(/font.ttf) format("truetype");font-weight:100 900;font-display:swap}
+/* Tokens iguais aos da tela inicial do projetor (Ui.java). Escuro e o padrao; .light segue o projetor. */
+:root{
+  --text:#F5F5F7;--muted:#8E8E93;--accent:#0A84FF;--accent2:#0060DF;--red:#FF453A;
+  --glass:rgba(44,44,46,.52);--glass-strong:rgba(58,58,60,.72);--edge:rgba(255,255,255,.09);--press:rgba(255,255,255,.14);
+  --sep:rgba(255,255,255,.08);--fill:rgba(255,255,255,.92);
+  --wall:linear-gradient(135deg,#0B1022 0%,#140E22 55%,#050507 100%);
+  --glowA:rgba(74,108,240,.50);--glowB:rgba(160,75,216,.44);--glowC:rgba(48,176,199,.36);
+  --grain:.07;--shadow:0 12px 32px rgba(0,0,0,.35);
+}
+html.light{
+  --text:#1D1D1F;--muted:#6E6E73;--accent:#007AFF;--accent2:#0062CC;--red:#FF3B30;
+  --glass:rgba(255,255,255,.58);--glass-strong:rgba(255,255,255,.82);--edge:rgba(255,255,255,.7);--press:rgba(0,0,0,.07);
+  --sep:rgba(0,0,0,.08);--fill:#fff;
+  --wall:linear-gradient(135deg,#E6ECFF 0%,#F6ECF6 55%,#FFF3E6 100%);
+  --glowA:rgba(169,193,255,.55);--glowB:rgba(255,201,168,.50);--glowC:rgba(153,226,208,.45);
+  --grain:.05;--shadow:0 12px 32px rgba(17,20,24,.10);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;color:var(--text);font-family:Inter,-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+html{background:#0B0D16}
+html.light{background:#EEF0F8}
+body::before,body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none}
+body::before{background:
+  radial-gradient(60vmax 60vmax at -10% -15%,var(--glowA),transparent 60%),
+  radial-gradient(65vmax 65vmax at 115% 110%,var(--glowB),transparent 60%),
+  radial-gradient(40vmax 40vmax at 90% 20%,var(--glowC),transparent 60%),
+  var(--wall)}
+body::after{opacity:var(--grain);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.2 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+html.light body::after{filter:invert(1)}
+body{padding:max(14px,env(safe-area-inset-top)) 18px calc(96px + env(safe-area-inset-bottom));min-height:100vh;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+svg{display:block}
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%);border:1px solid var(--edge)}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation}
+.press{transition:transform .12s cubic-bezier(.3,.7,.4,1),background .12s}
+.press:active{transform:scale(.92)}
+
+/* Cabecalho: titulo grande (iOS) + botoes de icone */
+header{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 14px}
+h1{margin:0;font-size:32px;font-weight:700;letter-spacing:-.8px;display:flex;align-items:center;gap:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:#FF9F0A;transition:background .3s}
+.dot.on{background:#30D158;box-shadow:0 0 8px #30D158}
+.hb{display:flex;gap:8px}
+.ib{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--text)}
+
+/* Tocando agora */
+.now{display:flex;align-items:center;gap:12px;padding:10px 14px 10px 10px;border-radius:20px;margin-bottom:14px;min-height:64px}
+.now img,.now .ph{width:44px;height:44px;border-radius:11px;background:var(--fill);object-fit:contain;padding:5px;flex:none}
+.now .ph{display:grid;place-items:center;color:#1D1D1F}
+.now div{min-width:0;flex:1}
+.now b{display:block;font-size:17px;font-weight:600;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now span{display:block;font-size:14px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.view{display:none;flex-direction:column;gap:14px}.view.sel{display:flex}
+
+/* Controle: joystick (OK arrastavel) + barra de rolagem contextual */
+.remote{border-radius:32px;padding:10px;box-shadow:var(--shadow)}
+.rbody{display:flex;gap:10px;height:min(36vh,300px)}
+.joy{position:relative;flex:1;border-radius:24px;touch-action:none;display:grid;place-items:center;overflow:hidden}
+.ring{position:absolute;width:200px;height:200px;border-radius:50%;border:1px solid var(--sep);background:radial-gradient(circle,rgba(255,255,255,.05),transparent 70%)}
+.arr{position:absolute;color:var(--muted);opacity:.5;transition:opacity .12s,color .12s,transform .12s}
+.arr.au{top:calc(50% - 92px)}.arr.ad{bottom:calc(50% - 92px)}.arr.al{left:calc(50% - 92px)}.arr.ar{right:calc(50% - 92px)}
+.arr.hit{opacity:1;color:var(--accent);transform:scale(1.35)}
+.knob{position:relative;width:92px;height:92px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;box-shadow:0 10px 26px rgba(10,132,255,.45),inset 0 1px 0 rgba(255,255,255,.28);transition:transform .24s cubic-bezier(.2,.9,.3,1.3);pointer-events:none}
+.knob.drag{transition:none}
+.knob svg{transition:opacity .2s}
+.tip{position:absolute;bottom:12px;left:0;right:0;text-align:center;font-size:12px;color:var(--muted);pointer-events:none;transition:opacity .5s}
+.tip.gone{opacity:0}
+.seg{position:absolute;top:10px;right:10px;display:flex;gap:2px;padding:2px;border-radius:11px;background:rgba(0,0,0,.22);z-index:2}
+html.light .seg{background:rgba(0,0,0,.06)}
+.seg button{width:34px;height:28px;border-radius:9px;display:grid;place-items:center;color:var(--muted)}
+.seg button.sel{background:var(--glass-strong);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.scroll{position:relative;width:48px;border-radius:24px;touch-action:none;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 0;color:var(--muted)}
+.scroll[hidden]{display:none}
+.thumb{position:absolute;left:10px;right:10px;top:calc(50% - 30px);height:60px;border-radius:14px;background:var(--glass-strong);border:1px solid var(--edge);display:grid;place-items:center;transition:transform .2s;pointer-events:none}
+.thumb.drag{transition:none}
+.thumb i{display:block;width:14px;height:2px;border-radius:1px;background:var(--muted);box-shadow:0 -5px 0 var(--muted),0 5px 0 var(--muted)}
+
+/* Botoes redondos so com icone (como o Controle Remoto da Apple TV) */
+.keys{display:flex;justify-content:space-between;align-items:center;padding:0 2px}
+.rk{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;color:var(--text)}
+.rk:active{background:var(--press)}
+.keys.media{justify-content:center;gap:28px}
+.keys.media[hidden]{display:none}
+
+/* Volume estilo Central de Controle: arrastar para os lados; icone = mudo */
+.vslider{position:relative;height:56px;border-radius:18px;overflow:hidden;touch-action:none;display:flex;align-items:center;padding:0 6px}
+.vfill{position:absolute;left:0;top:0;bottom:0;width:50%;background:var(--fill);pointer-events:none;transition:width .18s}
+.vslider.drag .vfill{transition:none}
+.vicon{position:relative;z-index:1;width:44px;height:44px;display:grid;place-items:center;color:#1D1D1F}
+.vslider.low .vicon{color:var(--text)}
+
+.rk.mic{width:70px;height:70px;margin-top:-4px;background:var(--accent);color:#fff;box-shadow:0 10px 28px rgba(10,132,255,.42)}
+.rk.mic:active{background:var(--accent2)}
+
+/* Favoritos: fileira de icones (como o Dock), rola para o lado */
+.dock{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-left:18px;padding:4px 2px 2px;margin:0 -18px;padding-left:18px;padding-right:18px;scrollbar-width:none}
+.dock::-webkit-scrollbar{display:none}
+.app{flex:none;width:64px;display:flex;flex-direction:column;align-items:center;gap:6px;scroll-snap-align:start}
+.app .ic{width:60px;height:60px;border-radius:15px;background:var(--fill);display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.18);overflow:hidden}
+.app .ic img{width:44px;height:44px;object-fit:contain}
+.app .ic b{font-size:22px;color:#1D1D1F}
+.app span{max-width:68px;font-size:11px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Enviar */
+.large{margin:4px 2px 0;font-size:32px;font-weight:700;letter-spacing:-.8px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{aspect-ratio:1;border-radius:24px;display:flex;flex-direction:column;justify-content:space-between;padding:16px;text-align:left;cursor:pointer}
+.tile .ti{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;color:#fff}
+.tile b{font-size:17px;font-weight:600;letter-spacing:-.2px}
+.bar{height:6px;border-radius:3px;background:var(--glass-strong);overflow:hidden;display:none}.bar.on{display:block}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+.hint{font-size:13px;color:var(--muted);line-height:1.5;margin:0}
+
+/* Barra de abas (iOS) */
+.tabbar{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 1fr;padding:8px 40px calc(8px + env(safe-area-inset-bottom));border-width:1px 0 0;border-radius:0;z-index:5}
+.tabbar button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:500;color:var(--muted);padding:4px 0}
+.tabbar button.sel{color:var(--accent)}
+
+/* Paineis (sheets) do iOS, com alca */
+.sheet{position:fixed;inset:0;z-index:15;display:none;align-items:flex-end;background:rgba(0,0,0,.35)}
+.sheet.show{display:flex}
+.sheetbox{width:100%;border-radius:22px 22px 0 0;padding:8px 18px calc(22px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;background:var(--glass-strong);-webkit-backdrop-filter:blur(30px) saturate(170%);backdrop-filter:blur(30px) saturate(170%);animation:up .28s cubic-bezier(.2,.9,.3,1)}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.grab{align-self:center;width:36px;height:5px;border-radius:3px;background:var(--muted);opacity:.5;margin-bottom:4px}
+.sheetbox h2{margin:0;font-size:20px;font-weight:700;letter-spacing:-.3px}
+.field{display:flex;gap:8px;align-items:center}
+input[type=text],input[type=url],input[type=tel]{flex:1;min-width:0;height:50px;padding:0 16px;border:0;border-radius:14px;background:var(--press);color:var(--text);font:500 17px Inter,-apple-system,system-ui,sans-serif;-webkit-user-select:text;user-select:text;outline:none}
+input::placeholder{color:var(--muted)}
+.go{width:50px;height:50px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{height:50px;border-radius:14px;background:var(--press);font-size:16px;font-weight:600}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.danger{color:var(--red)}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#30D158}
+.live i{width:7px;height:7px;border-radius:50%;background:#30D158;box-shadow:0 0 8px #30D158}
+.micbig{align-self:center;width:92px;height:92px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;box-shadow:0 10px 30px rgba(10,132,255,.45);margin-top:6px}
+.micbig.on{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(10,132,255,.55)}50%{box-shadow:0 0 0 18px rgba(10,132,255,0)}}
+.vstat{margin:0;text-align:center;font-size:20px;font-weight:600;letter-spacing:-.3px;min-height:1.3em}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.chips button{height:34px;padding:0 14px;border-radius:999px;background:var(--press);font-size:14px;font-weight:500}
+.list{border-radius:14px;background:var(--press);overflow:hidden}
+.list .li{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;font-size:16px;border-top:1px solid var(--sep)}
+.list .li:first-child{border-top:0}
+.list .li span{color:var(--muted)}
+.steps{margin:0;padding-left:20px;font-size:15px;line-height:1.6}
+code{display:block;font-size:12px;padding:10px 12px;border-radius:12px;background:var(--press);word-break:break-all;-webkit-user-select:text;user-select:text}
+
+/* PIN */
+#pin{position:fixed;inset:0;display:none;flex-direction:column;justify-content:center;gap:18px;padding:36px;z-index:20;background:rgba(0,0,0,.3);-webkit-backdrop-filter:blur(30px);backdrop-filter:blur(30px)}
+html.light #pin{background:rgba(255,255,255,.35)}
+#pin.show{display:flex}
+#pin img{align-self:center;border-radius:20px;box-shadow:var(--shadow)}
+#pin h2{margin:0;text-align:center;font-size:24px;font-weight:700;letter-spacing:-.4px}
+#pinin{text-align:center;font-size:30px;letter-spacing:16px;height:62px;flex:none;padding-left:32px}
+.switch{display:flex;align-items:center;justify-content:space-between;font-size:16px;padding:4px 2px}
+.switch input{appearance:none;-webkit-appearance:none;width:51px;height:31px;margin:0;border-radius:16px;background:var(--glass-strong);position:relative;transition:background .2s;flex:none}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .2s}
+.switch input:checked{background:#30D158}
+.switch input:checked::after{transform:translateX(20px)}
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translate(-50%,-8px);background:var(--glass-strong);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border:1px solid var(--edge);color:var(--text);padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:30;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Projetor <span class="dot" id="dot" aria-label="Conexão"></span></h1>
+  <div class="hb">
+    <button class="ib glass press" id="gear" aria-label="Ajustes"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+    <button class="ib glass press" id="power" aria-label="Desligar ou ligar o projetor"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 7.5a8 8 0 1 0 11.4 0"/></svg></button>
+  </div>
+</header>
+
+<section class="view sel" id="v-ctl">
+  <div class="now glass" aria-live="polite">
+    <span class="ph" id="nowph"><svg width="24" height="24" viewBox="0 0 108 108" fill="none" stroke="currentColor" aria-hidden="true"><rect x="18" y="34" width="72" height="42" rx="12" stroke-width="7"/><circle cx="63" cy="55" r="13" stroke-width="7"/></svg></span>
+    <img id="nowicon" alt="" hidden>
+    <div><b id="nown">…</b><span id="foco"></span></div>
+  </div>
+
+  <div class="remote glass">
+    <div class="rbody">
+      <div class="joy" id="joy" aria-label="Arraste o botão central para navegar; toque para OK">
+        <div class="seg" role="radiogroup" aria-label="Modo">
+          <button class="sel" data-mode="nav" role="radio" aria-checked="true" aria-label="Navegar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 12h18M8 7l4-4 4 4M8 17l4 4 4-4M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg></button>
+          <button data-mode="cur" role="radio" aria-checked="false" aria-label="Cursor"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3l14 8-6 1.6L10 19z"/></svg></button>
+        </div>
+        <span class="ring"></span>
+        <svg class="arr au" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+        <svg class="arr ad" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        <svg class="arr al" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+        <svg class="arr ar" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        <span class="knob" id="knob"><svg id="knobok" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        <span class="tip" id="tip">Arraste para navegar · toque para OK</span>
+      </div>
+      <div class="scroll glass" id="scroll" hidden aria-label="Rolar a página">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+        <span class="thumb" id="thumb"><i></i></span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="keys">
+    <button class="rk glass press" data-k="back" aria-label="Voltar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
+    <button class="rk glass press" data-k="home" aria-label="Início"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2.5"/><path d="M8 20.5h8"/></svg></button>
+    <button class="rk mic press" id="mic" aria-label="Comando de voz"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+    <button class="rk glass press" id="kbd" aria-label="Teclado"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></button>
+    <button class="rk glass press" data-k="playpause" aria-label="Reproduzir ou pausar"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5l7.5 6.5L5 18.5z"/><rect x="14.5" y="6" width="2.4" height="12" rx="1"/><rect x="18.6" y="6" width="2.4" height="12" rx="1"/></svg></button>
+  </div>
+  <div class="keys media" id="media" hidden>
+    <button class="rk glass press" data-k="rew" data-r="1" aria-label="Voltar o vídeo"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 7l-7 5 7 5zM20 7l-7 5 7 5z"/></svg></button>
+    <button class="rk glass press" data-k="fwd" data-r="1" aria-label="Avançar o vídeo"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 7l7 5-7 5zM13 7l7 5-7 5z"/></svg></button>
+  </div>
+
+  <div class="vslider glass" id="vs" role="slider" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+    <span class="vfill" id="vfill"></span>
+    <button class="vicon" id="vmute" aria-label="Mudo"><svg id="vico" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg></button>
+  </div>
+
+  <div class="dock" id="apps" aria-label="Favoritos"></div>
+</section>
+
+<section class="view" id="v-send">
+  <div class="tiles">
+    <button class="tile glass press" id="tlink"><span class="ti" style="background:#0A84FF"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span><b>Link</b></button>
+    <label class="tile glass press" for="file"><span class="ti" style="background:#FF9F0A"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 16l5-5 4 4 2-2 7 7"/><circle cx="15.5" cy="8.5" r="1.5"/></svg></span><b>Foto ou vídeo</b></label>
+  </div>
+  <input id="file" type="file" accept="image/*,video/*">
+  <div class="bar" id="bar"><i id="barfill"></i></div>
+  <p class="hint" id="upst"></p>
+</section>
+
+<nav class="tabbar glass" role="tablist">
+  <button class="sel" data-tab="ctl" role="tab" aria-label="Controle"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="6"/><circle cx="12" cy="9" r="2.6"/><path d="M12 15v2"/></svg>Controle</button>
+  <button data-tab="send" role="tab" aria-label="Enviar"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 13v5a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-5"/></svg>Enviar</button>
+</nav>
+
+<div class="sheet" id="voice" role="dialog" aria-label="Comando de voz">
+  <div class="sheetbox">
+    <span class="grab"></span>
+    <button class="micbig press" id="micgo" aria-label="Ouvir"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+    <p class="vstat" id="vstat">Fale um comando</p>
+    <form class="field" id="vform">
+      <input id="vtxt" type="text" placeholder="abrir Netflix" autocomplete="off" enterkeyhint="send" aria-label="Comando">
+      <button class="go press" type="submit" aria-label="Enviar comando"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+    </form>
+    <div class="chips">
+      <button data-v="abrir Netflix">Abrir Netflix</button>
+      <button data-v="TV ao vivo">TV ao vivo</button>
+      <button data-v="pausar">Pausar</button>
+      <button data-v="volume 30">Volume 30</button>
+      <button data-v="tela inicial">Início</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="keys" role="dialog" aria-label="Teclado">
+  <div class="sheetbox">
+    <span class="grab"></span>
+    <div class="field" style="justify-content:space-between"><h2>Teclado</h2><span class="live"><i></i>Ao vivo</span></div>
+    <form id="tform"><input id="txt" type="text" placeholder="Digite aqui" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Texto" style="width:100%"></form>
+    <div class="row2"><button type="button" class="btn press" id="clear">Apagar</button><button type="button" class="btn primary press" id="enter">Buscar</button></div>
+  </div>
+</div>
+
+<div class="sheet" id="linksheet" role="dialog" aria-label="Abrir link">
+  <div class="sheetbox">
+    <span class="grab"></span>
+    <h2>Abrir link</h2>
+    <form class="field" id="uform">
+      <input id="url" type="url" placeholder="Cole o link" autocomplete="off" autocapitalize="off" enterkeyhint="go" aria-label="Link">
+      <button class="go press" type="submit" aria-label="Abrir"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+    </form>
+  </div>
+</div>
+
+<div class="sheet" id="settings" role="dialog" aria-label="Ajustes">
+  <div class="sheetbox">
+    <span class="grab"></span>
+    <h2>Ajustes</h2>
+    <div class="list">
+      <div class="li">Projetor<span id="sip"></span></div>
+      <div class="li">PIN<span id="spin"></span></div>
+      <label class="li switch" style="margin:0">Acesso pelo PC (ADB)<input type="checkbox" id="adb"></label>
+    </div>
+    <p class="hint" id="adbhint" style="margin:-4px 4px 0;font-size:13px;opacity:.7">Deixe desligado. Ligue só para desinstalar o app pelo computador.</p>
+    <button class="btn press" id="newpin" type="button">Gerar novo PIN</button>
+    <details class="list" style="padding:0 16px">
+      <summary class="li" style="padding:14px 0;list-style:none">Siri<span>›</span></summary>
+      <ol class="steps"><li>App Atalhos → novo atalho "Projetor"</li><li>Ditar texto</li><li>Obter conteúdo do URL (POST, JSON, campo <b>s</b> = Texto ditado)</li><li>Falar texto (valor "fala")</li></ol>
+      <code id="exv" style="margin:10px 0 14px"></code>
+    </details>
+    <button class="btn danger press" id="forget" type="button">Esquecer este aparelho</button>
+    <button class="btn danger press" id="uninstall" type="button">Remover o app do projetor</button>
+  </div>
+</div>
+
+<div id="pin">
+  <img src="/icon.png" alt="" width="80" height="80">
+  <h2>Projetor</h2>
+  <form id="pform" style="display:flex;flex-direction:column;gap:14px">
+    <input id="pinin" type="tel" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="PIN" aria-label="PIN">
+    <label class="switch">Lembrar este aparelho<input type="checkbox" id="remember" checked></label>
+    <button class="btn primary press" type="submit">Entrar</button>
+  </form>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  // "Lembrar este aparelho": PIN fica salvo no iPhone (localStorage); senao so ate fechar a aba.
+  var T = '';
+  try { T = localStorage.getItem('pin') || sessionStorage.getItem('pin') || ''; } catch (e) {}
+  // QR da tela do projetor: http://IP:8080/#p=PIN. Salva o PIN e tira do endereco
+  // (assim o icone da Tela de Inicio nao guarda o PIN no link).
+  var fromQr = /^#p=(\d{6})$/.exec(location.hash);
+  if (fromQr) {
+    T = fromQr[1];
+    try { localStorage.setItem('pin', T); } catch (e) {}
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  }
+  try { if (localStorage.getItem('tema') === 'claro') document.documentElement.classList.add('light'); } catch (e) {}
+  var ws = null, started = false, stateTimer = 0;
+
+  function toast(msg) {
+    var t = $('#toast'); t.textContent = msg; t.classList.add('on');
+    clearTimeout(toast.h); toast.h = setTimeout(function () { t.classList.remove('on'); }, 1600);
+  }
+  function api(path, params) {
+    var q = new URLSearchParams(Object.assign({ t: T }, params || {}));
+    return fetch('/api/' + path + '?' + q.toString(), { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .catch(function () { return { ok: false }; });
+  }
+  function setStatus(on) { $('#dot').classList.toggle('on', on); $('#dot').setAttribute('aria-label', on ? 'Conectado' : 'Desconectado'); }
+  function connect() {
+    if (!T) return;
+    try { ws = new WebSocket('ws://' + location.host + '/ws?t=' + encodeURIComponent(T)); }
+    catch (e) { setTimeout(connect, 2000); return; }
+    ws.onopen = function () { setStatus(true); };
+    // O projetor avisa quando muda de app ou de item focado.
+    ws.onmessage = function (ev) { try { applyScreen(JSON.parse(ev.data)); } catch (e) {} };
+    ws.onclose = function () {
+      setStatus(false);
+      // So reconecta se o PIN ainda vale; senao pede o PIN de novo (nao insiste com PIN velho).
+      api('ping').then(function (r) {
+        if (r.auth) setTimeout(connect, 1500);
+        else if (r.ok) forgetAndAsk();
+        else setTimeout(connect, 3000);
+      });
+    };
+    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+  }
+  function send(msg, fallback) {
+    if (ws && ws.readyState === 1) ws.send(msg);
+    else if (fallback) fallback();
+  }
+  function key(k) { send('k:' + k, function () { api('key', { k: k }); }); }
+
+  // Botoes de tecla; os marcados com data-r repetem enquanto segurados.
+  document.querySelectorAll('[data-k]').forEach(function (b) {
+    var k = b.getAttribute('data-k'), rep = b.hasAttribute('data-r'), t1 = 0, t2 = 0;
+    function stop() { clearTimeout(t1); clearInterval(t2); }
+    b.addEventListener('pointerdown', function (e) {
+      e.preventDefault(); key(k);
+      if (rep) t1 = setTimeout(function () { t2 = setInterval(function () { key(k); }, 110); }, 420);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { b.addEventListener(ev, stop); });
+    b.addEventListener('click', function (e) { e.preventDefault(); });
+  });
+
+  document.querySelectorAll('.tabbar button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.tabbar button').forEach(function (x) { x.classList.toggle('sel', x === b); });
+      document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('sel', v.id === 'v-' + b.dataset.tab); });
+      refreshState();
+    });
+  });
+
+  $('#power').addEventListener('click', function () {
+    if (confirm('Desligar o projetor?')) api('power').then(function (r) { toast(r.ok ? 'Desligando' : 'Falhou'); });
+  });
+
+  // ---- Joystick: arraste o OK. Navegar = setas (mais longe, mais rapido); Cursor = move a seta ----
+  var joy = $('#joy'), knob = $('#knob'), R = 80, DEAD = 24, mode = 'nav';
+  var jo = null, jx = 0, jy = 0, jlen = 0, jMoved = false, jAt = 0, jDir = null, jRep = 0, jRaf = 0, jHold = 0;
+  var arrows = { up: joy.querySelector('.au'), down: joy.querySelector('.ad'), left: joy.querySelector('.al'), right: joy.querySelector('.ar') };
+  var CURSOR_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 3l13 8-5.6 1.5L10.5 19z"/></svg>';
+  var OK_SVG = knob.innerHTML;
+  function lit(dir) { for (var d in arrows) arrows[d].classList.toggle('hit', d === dir); }
+  function setMode(m) {
+    mode = m;
+    document.querySelectorAll('.seg button').forEach(function (b) {
+      var on = b.dataset.mode === m; b.classList.toggle('sel', on); b.setAttribute('aria-checked', on);
+    });
+    knob.innerHTML = m === 'nav' ? OK_SVG : CURSOR_SVG;
+    if (m === 'cur') send('m:0,0');
+  }
+  document.querySelectorAll('.seg button').forEach(function (b) { b.addEventListener('click', function () { setMode(b.dataset.mode); }); });
+  // A dica so aparece ate o primeiro uso.
+  try { if (localStorage.getItem('dica')) $('#tip').classList.add('gone'); } catch (e) {}
+  function hideTip() { $('#tip').classList.add('gone'); try { localStorage.setItem('dica', '1'); } catch (e) {} }
+
+  function repeatNav() {
+    if (!jDir) return;
+    key(jDir);
+    var f = Math.max(0, Math.min(1, (jlen - DEAD) / (R - DEAD)));
+    jRep = setTimeout(repeatNav, 440 - 330 * f);
+  }
+  // Modo cursor: manda a velocidade (px/s) umas 12 vezes por segundo; o projetor anima a seta
+  // sozinho a cada quadro (fica liso mesmo com o Wi-Fi oscilando). "j:0,0" para.
+  var jSent = '', jSentAt = 0;
+  function cursorLoop() {
+    jRaf = 0;
+    if (!jo || mode !== 'cur') return;
+    var vx = 0, vy = 0;
+    if (jlen > 6) {
+      var f = Math.min(1, jlen / R), speed = 60 + 1100 * Math.pow(f, 1.8);
+      vx = Math.round(jx / jlen * speed); vy = Math.round(jy / jlen * speed);
+    }
+    var msg = 'j:' + vx + ',' + vy, now = Date.now();
+    if (msg !== jSent ? now - jSentAt > 60 : now - jSentAt > 150) { send(msg); jSent = msg; jSentAt = now; }
+    jRaf = requestAnimationFrame(cursorLoop);
+  }
+  function joyStop() { if (jSent && jSent !== 'j:0,0') send('j:0,0'); jSent = ''; }
+  joy.addEventListener('touchstart', function (e) {
+    if (e.target.closest('.seg')) return;
+    e.preventDefault(); hideTip();
+    var t = e.touches[0];
+    jo = { x: t.clientX, y: t.clientY }; jx = jy = jlen = 0; jMoved = false; jAt = Date.now(); jDir = null;
+    knob.classList.add('drag');
+    if (mode === 'cur') {
+      if (!jRaf) jRaf = requestAnimationFrame(cursorLoop);
+      jHold = setTimeout(function () { if (!jMoved) { send('lc'); jMoved = true; } }, 650);
+    }
+  }, { passive: false });
+  joy.addEventListener('touchmove', function (e) {
+    if (!jo) return;
+    e.preventDefault();
+    var t = e.touches[0], dx = t.clientX - jo.x, dy = t.clientY - jo.y, len = Math.sqrt(dx * dx + dy * dy);
+    if (len > R) { dx = dx / len * R; dy = dy / len * R; len = R; }
+    jx = dx; jy = dy; jlen = len;
+    knob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    if (len > 10) jMoved = true;
+    if (mode !== 'nav') return;
+    var dir = len < DEAD ? null : (Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+    if (dir !== jDir) {
+      jDir = dir; clearTimeout(jRep); lit(dir);
+      if (dir) { key(dir); jRep = setTimeout(repeatNav, 400); }
+    }
+  }, { passive: false });
+  function joyEnd(e) {
+    if (!jo) return;
+    if (e) e.preventDefault();
+    clearTimeout(jRep); clearTimeout(jHold); lit(null); if (mode === 'cur') joyStop();
+    knob.classList.remove('drag'); knob.style.transform = '';
+    if (!jMoved && Date.now() - jAt < 450) {
+      if (mode === 'nav') key('ok'); else send('c', function () { api('click'); });
+    }
+    jo = null; jDir = null; jlen = 0;
+  }
+  joy.addEventListener('touchend', joyEnd, { passive: false });
+  joy.addEventListener('touchcancel', joyEnd, { passive: false });
+  joy.addEventListener('click', function (e) { if (!('ontouchstart' in window) && !e.target.closest('.seg')) { if (mode === 'nav') key('ok'); else send('c'); } });
+
+  // ---- Barra de rolagem (so no navegador): arrastar para baixo desce a pagina ----
+  var sc = $('#scroll'), thumb = $('#thumb'), so = 0, sAcc = 0, sLast = 0, sTimer = 0;
+  function flushScroll() { if (Math.abs(sAcc) >= 3) { send('s:' + Math.round(-sAcc * 3)); sAcc = 0; } }
+  sc.addEventListener('touchstart', function (e) {
+    e.preventDefault(); so = sLast = e.touches[0].clientY; sAcc = 0; thumb.classList.add('drag');
+    sTimer = setInterval(flushScroll, 110);
+  }, { passive: false });
+  sc.addEventListener('touchmove', function (e) {
+    e.preventDefault();
+    var y = e.touches[0].clientY, h = sc.clientHeight / 2 - 40;
+    sAcc += y - sLast; sLast = y;
+    thumb.style.transform = 'translateY(' + Math.max(-h, Math.min(h, y - so)) + 'px)';
+  }, { passive: false });
+  function scrollEnd() { clearInterval(sTimer); flushScroll(); thumb.classList.remove('drag'); thumb.style.transform = ''; }
+  sc.addEventListener('touchend', scrollEnd);
+  sc.addEventListener('touchcancel', scrollEnd);
+
+  // ---- Volume: arrastar para os lados (relativo, como no iPhone) ----
+  var vs = $('#vs'), vfill = $('#vfill'), vol = 50, muted = false, vDrag = false, vStart = 0, vX = 0, vSent = -1, vTimer = 0;
+  var ICON_ON = '<path d="M11 5L6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>';
+  var ICON_OFF = '<path d="M11 5L6 9H3v6h3l5 4z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6"/>';
+  function showVol(v, m) { if (vDrag) return; vol = v; muted = !!m; paintVol(); }
+  function paintVol() {
+    var shown = muted ? 0 : vol;
+    vfill.style.width = shown + '%';
+    vs.classList.toggle('low', shown < 16);
+    vs.setAttribute('aria-valuenow', shown);
+    $('#vico').innerHTML = muted || vol === 0 ? ICON_OFF : ICON_ON;
+  }
+  function sendVol() { if (vol !== vSent) { vSent = vol; send('v:' + vol, function () { api('volume', { set: vol }); }); } }
+  vs.addEventListener('touchstart', function (e) {
+    if (e.target.closest('#vmute')) return;
+    e.preventDefault(); vDrag = true; vs.classList.add('drag');
+    vStart = muted ? 0 : vol; vX = e.touches[0].clientX; vSent = -1; muted = false;
+    vTimer = setInterval(sendVol, 90);
+  }, { passive: false });
+  vs.addEventListener('touchmove', function (e) {
+    if (!vDrag) return;
+    e.preventDefault();
+    vol = Math.max(0, Math.min(100, Math.round(vStart + (e.touches[0].clientX - vX) / vs.clientWidth * 100)));
+    paintVol();
+  }, { passive: false });
+  function volEnd() { if (!vDrag) return; clearInterval(vTimer); sendVol(); vDrag = false; vs.classList.remove('drag'); }
+  vs.addEventListener('touchend', volEnd);
+  vs.addEventListener('touchcancel', volEnd);
+  $('#vmute').addEventListener('click', function () { muted = !muted; paintVol(); key('mute'); });
+  paintVol();
+
+  // ---- Paineis ----
+  function openSheet(id) { $(id).classList.add('show'); }
+  function closeSheets() { document.querySelectorAll('.sheet').forEach(function (s) { s.classList.remove('show'); }); stopListening(); }
+  document.querySelectorAll('.sheet').forEach(function (s) { s.addEventListener('click', function (e) { if (e.target === s) closeSheets(); }); });
+  $('#gear').addEventListener('click', function () { openSheet('#settings'); });
+  $('#tlink').addEventListener('click', function () { openSheet('#linksheet'); $('#url').focus(); });
+
+  // ---- Teclado ao vivo: cada mudanca no campo vira apagar/digitar no projetor ----
+  // O projetor so digita ASCII; o mesmo filtro aqui mantem a contagem de letras igual dos dois lados.
+  var sent = '';
+  function plain(s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x20-\x7E]/g, ''); }
+  function syncText() {
+    var now = plain($('#txt').value), i = 0;
+    while (i < sent.length && i < now.length && sent[i] === now[i]) i++;
+    for (var d = sent.length - i; d > 0; d--) send('k:del', function () { api('key', { k: 'del' }); });
+    var add = now.slice(i);
+    if (add) send('t:' + add, function () { api('text', { s: add }); });
+    sent = now;
+  }
+  $('#kbd').addEventListener('click', function () { $('#txt').value = ''; sent = ''; openSheet('#keys'); $('#txt').focus(); });
+  $('#txt').addEventListener('input', syncText);
+  function pressEnter() { key('enter'); $('#txt').value = ''; sent = ''; closeSheets(); }
+  $('#tform').addEventListener('submit', function (e) { e.preventDefault(); pressEnter(); });
+  $('#enter').addEventListener('click', pressEnter);
+  $('#clear').addEventListener('click', function () { $('#txt').value = ''; syncText(); $('#txt').focus(); });
+
+  // ---- Voz ----
+  // O Safari so libera o microfone da pagina em HTTPS. Em HTTP usa o ditado do teclado do iPhone;
+  // o foco no campo tem que acontecer dentro do toque, senao o iOS nao abre o teclado.
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null, canSR = !!SR && window.isSecureContext;
+  function say(text) {
+    try { var u = new SpeechSynthesisUtterance(text); u.lang = 'pt-BR'; u.rate = 1.05; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {}
+  }
+  function runVoice(text) {
+    if (!text) return;
+    $('#vstat').textContent = '“' + text + '”';
+    api('voz', { s: text }).then(function (r) {
+      var msg = r.fala || (r.ok ? 'Ok.' : 'Não entendi.');
+      $('#vstat').textContent = msg; say(msg);
+      if (r.ok) setTimeout(function () { closeSheets(); refreshState(); }, 1000);
+    });
+  }
+  function stopListening() { if (rec) { try { rec.abort(); } catch (e) {} rec = null; } $('#micgo').classList.remove('on'); }
+  function useDictation() { $('#vstat').textContent = 'Toque no microfone do teclado'; $('#vtxt').value = ''; $('#vtxt').focus(); }
+  var vIdle = 0;
+  $('#vtxt').addEventListener('input', function () {
+    clearTimeout(vIdle);
+    var v = $('#vtxt').value.trim();
+    // Quando o ditado para por um instante, o comando e enviado sozinho.
+    if (v) { $('#vstat').textContent = v; vIdle = setTimeout(function () { $('#vtxt').value = ''; $('#vtxt').blur(); runVoice(v); }, 1800); }
+  });
+  function listen() {
+    if (!canSR) { useDictation(); return; }
+    stopListening();
+    rec = new SR(); rec.lang = 'pt-BR'; rec.interimResults = true; rec.maxAlternatives = 1;
+    var finalText = '';
+    rec.onstart = function () { $('#micgo').classList.add('on'); $('#vstat').textContent = 'Ouvindo…'; };
+    rec.onresult = function (ev) {
+      var t = ''; for (var i = 0; i < ev.results.length; i++) t += ev.results[i][0].transcript;
+      $('#vstat').textContent = t;
+      if (ev.results[ev.results.length - 1].isFinal) finalText = t;
+    };
+    rec.onerror = function () { stopListening(); useDictation(); };
+    rec.onend = function () { $('#micgo').classList.remove('on'); rec = null; if (finalText) runVoice(finalText.trim()); };
+    try { rec.start(); } catch (e) { useDictation(); }
+  }
+  $('#mic').addEventListener('click', function () { $('#vstat').textContent = 'Fale um comando'; openSheet('#voice'); listen(); });
+  $('#micgo').addEventListener('click', listen);
+  $('#vform').addEventListener('submit', function (e) { e.preventDefault(); clearTimeout(vIdle); var v = $('#vtxt').value.trim(); $('#vtxt').value = ''; runVoice(v); });
+  document.querySelectorAll('.chips [data-v]').forEach(function (b) { b.addEventListener('click', function () { runVoice(b.dataset.v); }); });
+
+  // ---- Controle adaptado a cada tela ----
+  // inicio/video: joystick de setas (video ganha voltar/avancar) · web: cursor + barra de rolagem
+  var profile = null, nowApp = null;
+  function applyScreen(s) {
+    if (!s || !s.app) return;
+    $('#nown').textContent = s.nome || '—';
+    $('#foco').textContent = s.foco || '';
+    if (s.app !== nowApp) {
+      nowApp = s.app;
+      var img = $('#nowicon');
+      if (s.perfil === 'inicio') { img.hidden = true; $('#nowph').hidden = false; }
+      else {
+        img.onload = function () { img.hidden = false; $('#nowph').hidden = true; };
+        img.onerror = function () { img.hidden = true; $('#nowph').hidden = false; };
+        img.src = '/api/icon?pkg=' + encodeURIComponent(s.nome === 'TV ao vivo' ? 'tv.aovivo' : s.app) + '&t=' + encodeURIComponent(T);
+      }
+    }
+    var p = s.perfil || 'geral';
+    if (p === profile) return;
+    profile = p;
+    setMode(p === 'web' ? 'cur' : 'nav');
+    $('#scroll').hidden = p !== 'web';
+    $('#media').hidden = p !== 'video';
+  }
+
+  // ---- Favoritos e estado ----
+  function loadApps() {
+    api('apps').then(function (list) {
+      if (!Array.isArray(list)) return;
+      var favs = list.filter(function (a) { return a.fav >= 0; }).sort(function (a, b) { return a.fav - b.fav; });
+      if (!favs.length) favs = list.slice(0, 8);
+      var box = $('#apps'); box.innerHTML = '';
+      favs.forEach(function (a) {
+        var b = document.createElement('button'); b.className = 'app press'; b.setAttribute('aria-label', a.nome);
+        var ic = document.createElement('span'); ic.className = 'ic';
+        var img = document.createElement('img'); img.alt = ''; img.loading = 'lazy';
+        img.src = '/api/icon?pkg=' + encodeURIComponent(a.pkg) + '&t=' + encodeURIComponent(T);
+        img.onerror = function () { var m = document.createElement('b'); m.textContent = a.nome.charAt(0).toUpperCase(); img.replaceWith(m); };
+        ic.appendChild(img);
+        var n = document.createElement('span'); n.textContent = a.nome;
+        b.appendChild(ic); b.appendChild(n);
+        b.addEventListener('click', function () {
+          api('open', { app: a.pkg }).then(function (r) { if (!r.ok) toast('Não abriu'); setTimeout(refreshState, 1200); });
+        });
+        box.appendChild(b);
+      });
+    });
+  }
+  function refreshState() {
+    if (!T) return;
+    api('state').then(function (s) {
+      if (!s || !s.ok) return;
+      showVol(s.volume, s.mudo);
+      applyScreen(s);
+      var light = s.escuro === false;
+      document.documentElement.classList.toggle('light', light);
+      try { localStorage.setItem('tema', light ? 'claro' : 'escuro'); } catch (e) {}
+    });
+  }
+
+  // ---- Enviar ----
+  $('#uform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var u = $('#url').value.trim(); if (!u) return;
+    api('url', { u: u }).then(function (r) { toast(r.ok ? 'Abrindo' : 'Não abriu'); if (r.ok) { $('#url').value = ''; closeSheets(); } });
+  });
+  $('#file').addEventListener('change', function () {
+    var f = this.files[0]; if (!f) return;
+    var bar = $('#bar'), fill = $('#barfill'), st = $('#upst');
+    bar.classList.add('on'); fill.style.width = '0%'; st.textContent = f.name;
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/upload?t=' + encodeURIComponent(T) + '&name=' + encodeURIComponent(f.name));
+    x.upload.onprogress = function (ev) { if (ev.lengthComputable) fill.style.width = Math.round(ev.loaded / ev.total * 100) + '%'; };
+    x.onload = function () {
+      var r = {}; try { r = JSON.parse(x.responseText); } catch (e) {}
+      st.textContent = r.ok ? '' : ('Falhou: ' + (r.erro || x.status));
+      if (r.ok) toast('Na tela');
+      setTimeout(function () { bar.classList.remove('on'); }, 800);
+    };
+    x.onerror = function () { st.textContent = 'Sem conexão com o projetor'; bar.classList.remove('on'); };
+    x.send(f);
+    this.value = '';
+  });
+
+  // ---- PIN e ajustes ----
+  function fillSettings() {
+    $('#sip').textContent = location.host;
+    $('#spin').textContent = T;
+    $('#exv').textContent = location.origin + '/api/voz?t=' + T;
+    loadAdb();
+  }
+  function forgetAndAsk() {
+    try { localStorage.removeItem('pin'); sessionStorage.removeItem('pin'); } catch (e) {}
+    T = ''; started = false; clearInterval(stateTimer); closeSheets();
+    if (ws) { ws.onclose = null; try { ws.close(); } catch (e) {} ws = null; }
+    setStatus(false); askPin();
+  }
+  $('#forget').addEventListener('click', function () { if (confirm('Esquecer este aparelho?')) forgetAndAsk(); });
+  function start() {
+    if (started) return; started = true;
+    $('#pin').classList.remove('show');
+    fillSettings(); connect(); loadApps(); refreshState();
+    stateTimer = setInterval(function () { if (!document.hidden) refreshState(); }, 5000);
+  }
+  function askPin() { $('#pinin').value = ''; $('#pin').classList.add('show'); setTimeout(function () { $('#pinin').focus(); }, 50); }
+  $('#pform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    T = $('#pinin').value.trim();
+    api('ping').then(function (r) {
+      if (r.auth) {
+        try {
+          if ($('#remember').checked) localStorage.setItem('pin', T);
+          else { localStorage.removeItem('pin'); sessionStorage.setItem('pin', T); }
+        } catch (e) {}
+        start();
+      } else { toast(r.ok ? 'PIN incorreto' : 'Sem conexão'); $('#pinin').value = ''; }
+    });
+  });
+  // PIN de 6 digitos entra sozinho, sem apertar Entrar.
+  $('#pinin').addEventListener('input', function () { if (this.value.length === 6) $('#pform').requestSubmit(); });
+
+  function post(path, params) {
+    var q = new URLSearchParams(Object.assign({ t: T }, params || {}));
+    return fetch('/api/' + path + '?' + q.toString(), { method: 'POST', cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .catch(function () { return { ok: false }; });
+  }
+  function loadAdb() { api('adb').then(function (r) { if (r.ok) $('#adb').checked = !!r.adb; }); }
+  $('#adb').addEventListener('change', function () {
+    var on = this.checked, box = this;
+    if (on && !confirm('Ligar o acesso pelo PC? Qualquer computador na sua rede poderá controlar o projetor por completo. Desligue de novo depois de usar.')) { box.checked = false; return; }
+    post('adb', { on: on ? '1' : '0' }).then(function (r) {
+      if (!r.ok) { box.checked = !on; toast('Não foi possível mudar'); return; }
+      box.checked = !!r.adb; toast(r.adb ? 'Acesso pelo PC ligado' : 'Acesso pelo PC desligado');
+    });
+  });
+  $('#uninstall').addEventListener('click', function () {
+    if (!confirm('Remover o app Projetor? O projetor volta para a tela inicial e o modo mouse de fábrica. Este controle deixa de funcionar.')) return;
+    post('desinstalar').then(function (r) {
+      if (!r.ok) { toast('Não foi possível remover'); return; }
+      toast('Removendo do projetor…'); started = false; closeSheets();
+      if (ws) { ws.onclose = null; try { ws.close(); } catch (e) {} ws = null; }
+      setStatus(false);
+    });
+  });
+  $('#newpin').addEventListener('click', function () {
+    if (!confirm('Gerar um PIN novo? Os outros celulares e os atalhos da Siri vão precisar do novo PIN.')) return;
+    // O projetor derruba as conexões com o PIN antigo; esta página reconecta sozinha com o novo.
+    if (ws) ws.onclose = null;
+    post('pin/novo').then(function (r) {
+      if (!r.ok || !r.pin) {
+        toast('Não foi possível gerar');
+        if (ws) { try { ws.close(); } catch (e) {} ws = null; }
+        connect();
+        return;
+      }
+      var remembered = false;
+      try { remembered = !!localStorage.getItem('pin'); } catch (e) {}
+      T = r.pin;
+      try { if (remembered) localStorage.setItem('pin', T); else sessionStorage.setItem('pin', T); } catch (e) {}
+      fillSettings();
+      if (ws) { ws.onclose = null; try { ws.close(); } catch (e) {} ws = null; }
+      connect();
+      toast('Novo PIN: ' + T);
+    });
+  });
+
+  if (T) api('ping').then(function (r) { r.auth ? start() : (r.ok ? forgetAndAsk() : askPin()); }); else askPin();
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && started) refreshState(); });
+})();
+</script>
+</body>
+</html>

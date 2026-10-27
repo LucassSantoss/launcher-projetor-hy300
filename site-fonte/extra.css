@@ -1,0 +1,125 @@
+
+/* ---------- Projetor: guia ---------- */
+@media (min-width:900px){ .nav-toggle{display:none} }
+.hero__grid{display:grid;gap:var(--s-6);align-items:center}
+@media (min-width:1024px){ .hero__grid{grid-template-columns:1.05fr 1fr} .hero .display{font-size:var(--step-4)} }
+
+/* Prints da tela do projetor: monocromáticos, emoldurados por fio. */
+.shot{margin:0;border:1px solid var(--line-2);border-radius:var(--radius);overflow:hidden;background:var(--paper-2)}
+.shot img{width:100%;height:auto;filter:grayscale(1) contrast(1.05)}
+.shot--hero{box-shadow:0 30px 80px rgba(0,0,0,.6)}
+
+/* Escolha do método (interação âncora) */
+.choice{display:flex;flex-direction:column;align-items:flex-start;gap:var(--s-2);text-align:left;padding:var(--s-5);
+  border:1px solid var(--line-2);border-radius:var(--radius);background:var(--paper);min-height:100%;
+  transition:border-color .2s,transform .3s var(--ease)}
+.choice:hover,.choice:focus-visible{border-color:var(--ink);transform:translateY(-3px)}
+.choice__title{font-family:var(--font-display);font-weight:700;font-size:var(--step-2);line-height:1.1;letter-spacing:-.02em}
+.choice__go{margin-top:auto;padding-top:var(--s-3);font-family:var(--font-mono);font-size:var(--step--1);letter-spacing:.08em;text-transform:uppercase}
+
+/* Cabeçalho de cada método */
+.method-head{display:flex;flex-direction:column;gap:var(--s-3);align-items:flex-start;padding-bottom:var(--s-5);border-bottom:1px solid var(--line)}
+@media (min-width:768px){ .method-head{flex-direction:row;align-items:center;justify-content:space-between} .method-head p{max-width:60ch} }
+.method-head .badge{margin-right:.4rem}
+
+/* Passo a passo numerado */
+.steps{list-style:none;padding:0;margin:var(--s-5) 0 0;counter-reset:step}
+.step{counter-increment:step;display:grid;gap:var(--s-4);padding-block:var(--s-5);border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0}
+.step__text{position:relative;padding-left:3.25rem}
+.step__text::before{content:counter(step,decimal-leading-zero);position:absolute;left:0;top:.1rem;
+  font-family:var(--font-mono);font-size:var(--step--1);letter-spacing:.1em;color:var(--ink-3);
+  width:2.4rem;height:2.4rem;display:grid;place-items:center;border:1px solid var(--line-2);border-radius:var(--radius)}
+.step__text h3{font-size:var(--step-2);margin-bottom:var(--s-2)}
+.step__text p + p{margin-top:var(--s-2)}
+.step .shot{margin-left:3.25rem}
+@media (min-width:900px){
+  .step{grid-template-columns:1fr 1.15fr;align-items:center;gap:var(--s-6)}
+  .step .shot{margin-left:0}
+  .steps--plain .step{grid-template-columns:1fr}
+}
+.url{font-family:var(--font-mono);font-size:var(--step-1);padding:.6rem .9rem;border:1px solid var(--line-2);border-radius:var(--radius);display:inline-block;margin-block:var(--s-2);word-break:break-all}
+.url--inline{display:inline-block;font-size:inherit;padding:.1rem .4rem;margin:.2rem 0 0;white-space:nowrap}
+.next{margin-top:var(--s-5);color:var(--ink-2)}
+.next a,.method-head a:not(.btn),.step__text a,.subtle a,.acc__panel a{text-decoration:underline;text-underline-offset:3px}
+
+/* Texto pronto para o Claude Code */
+.prompt{margin-top:var(--s-3);display:flex;flex-direction:column;gap:var(--s-3);align-items:flex-start}
+.prompt pre{width:100%;max-height:11rem;overflow:auto;white-space:pre-wrap;word-break:break-word;margin:0;
+  font-family:var(--font-mono);font-size:.82rem;line-height:1.55;color:var(--ink-2);
+  background:var(--paper-2);border:1px solid var(--line-2);border-radius:var(--radius);padding:var(--s-4)}
+code{font-family:var(--font-mono);font-size:.9em}
+.acc__panel p + p{margin-top:0}
+/* ---------- Celular: abas em barra unica e passos em cartoes que deslizam ---------- */
+@media (max-width:767px){
+  #instalar .tabs__list{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line-2);border-radius:var(--radius);overflow:hidden}
+  #instalar .tabs__tab{text-align:center;padding:.8rem .3rem;font-size:var(--step--1);border:0;border-left:1px solid var(--line-2);margin:0;white-space:nowrap}
+  #instalar .tabs__tab:first-child{border-left:0}
+  #instalar .tabs__tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+  .tabs__panel{padding-top:var(--s-4)}
+  .method-head{flex-direction:row;align-items:center;justify-content:space-between;gap:var(--s-3);padding-bottom:var(--s-4)}
+  .method-head .btn{padding:.7rem 1rem;font-size:var(--step--1);white-space:nowrap;flex:none}
+
+  .steps{display:flex;align-items:flex-start;gap:var(--s-3);overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;
+    margin:var(--s-4) calc(-1 * var(--gutter)) 0;padding:0 var(--gutter) var(--s-2);scroll-padding-inline:var(--gutter);scrollbar-width:none}
+  .steps::-webkit-scrollbar{display:none}
+  .step{flex:0 0 84%;scroll-snap-align:start;display:flex;flex-direction:column;gap:var(--s-3);
+    padding:var(--s-4);border:1px solid var(--line-2);border-radius:var(--radius);background:var(--paper-2)}
+  .step:last-child{border-bottom:1px solid var(--line-2)}
+  .step:only-child{flex-basis:100%}
+  .step .shot{order:-1;margin-left:0}
+  .step__text{padding-left:0}
+  .step__text::before{position:static;display:inline-grid;width:auto;height:auto;border:0;padding:0;margin-bottom:var(--s-2)}
+  .step__text h3{font-size:var(--step-1)}
+  .steps--plain .step{flex-basis:84%}
+  .prompt pre{max-height:9rem}
+}
+.dots{display:none}
+@media (max-width:767px){
+  .dots{display:flex;gap:6px;justify-content:center;margin-top:var(--s-3)}
+  .dots span{width:6px;height:6px;border-radius:50%;background:var(--line-2);transition:background .2s,transform .2s}
+  .dots span.on{background:var(--ink);transform:scale(1.25)}
+}
+
+
+/* Apoie (Pix) */
+.pix{display:grid;gap:var(--s-6);align-items:center}
+@media (min-width:768px){ .pix{grid-template-columns:1.3fr 1fr} }
+.pix__qr{margin:0;justify-self:start;display:flex;flex-direction:column;gap:var(--s-3);align-items:center}
+.pix__qr svg{width:min(260px,70vw);height:auto;border:1px solid var(--line-2)}
+.pix__code{margin:var(--s-3) 0 0;font-family:var(--font-mono);font-size:.72rem;line-height:1.5;color:var(--ink-3);white-space:pre-wrap;word-break:break-all;max-width:44ch}
+
+/* Ilustracoes: pendrive (traco) e telas do instalador desenhadas num celular */
+.shot--art{display:grid;place-items:center;padding:var(--s-5);color:var(--ink-2)}
+.shot--art svg{width:100%;max-width:320px;height:auto}
+@media (min-width:768px){ .shot--tall{max-width:300px} .steps--adb .step{grid-template-columns:1fr 300px} }
+.phone{margin:0 auto;width:min(100%,196px);aspect-ratio:9/16.5;border:2px solid var(--line-2);border-radius:28px;padding:10px;background:#000}
+.phone__screen{height:100%;border-radius:20px;background:#0A0A0A;padding:18px 12px;display:flex;flex-direction:column;gap:7px;overflow:hidden;font-family:Roboto,system-ui,sans-serif}
+.ph-t{font-weight:700;font-size:1.05rem;color:#fff;letter-spacing:-.01em}
+.ph-b{font-weight:700;font-size:.85rem;color:#fff}
+.ph-s{font-size:.7rem;color:#A3A3A3;line-height:1.35}
+.ph-s--sm{margin-top:6px;color:#737373}
+.ph-step{display:flex;align-items:center;gap:8px;font-size:.72rem;color:#fff}
+.ph-step span{width:20px;height:20px;display:grid;place-items:center;border:1px solid #3D3D3D;color:#737373;font-family:var(--font-mono);font-size:.6rem;flex:none}
+.ph-btn{margin-top:4px;padding:.55rem;text-align:center;font-weight:700;font-size:.72rem;background:#fff;color:#0A0A0A;border:1px solid #fff;border-radius:2px}
+.ph-btn--ghost{background:transparent;color:#fff;border-color:#3D3D3D}
+.ph-input{padding:.5rem;font-size:.72rem;color:#737373;border:1px solid #3D3D3D;border-radius:2px}
+@media (min-width:768px){ .steps--phones{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s-5)} .steps--phones .step{grid-template-columns:1fr;border:0} }
+@media (max-width:767px){ .steps--phones .step .phone{order:-1} }
+.pix__key{word-break:break-all}
+
+/* Rodape */
+.logo span{white-space:nowrap}
+.foot{display:grid;gap:var(--s-5);grid-template-columns:1fr 1fr}
+.foot__brand{grid-column:1/-1;display:flex;flex-direction:column;gap:var(--s-2)}
+.foot__col{display:flex;flex-direction:column;gap:.55rem}
+.foot__col .badge{align-self:flex-start;margin-bottom:.2rem}
+.foot__col a{color:var(--ink-2);font-size:var(--step--1);transition:color .2s}
+.foot__col a:hover{color:var(--ink)}
+@media (min-width:768px){ .foot{grid-template-columns:2fr 1fr 1fr} .foot__brand{grid-column:auto} }
+.foot__hash{margin-top:var(--s-5);color:var(--ink-3);font-size:var(--step--1)}
+.foot__hash summary{cursor:pointer;list-style:none}
+.foot__hash summary::-webkit-details-marker{display:none}
+.foot__hash summary::after{content:' +';font-family:var(--font-mono)}
+.foot__hash[open] summary::after{content:' −'}
+.foot__hash code{display:block;margin-top:.5rem;word-break:break-all;font-size:.75rem;color:var(--ink-2)}

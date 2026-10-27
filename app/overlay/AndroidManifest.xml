@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tema do sistema (RRO sobre o framework "android"): azul de destaque, cantos arredondados
+     e avisos (Toast) em pilula escura, no estilo do app Projetor. Desfazer: cmd overlay disable. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.mlab.projetor.tema">
+    <overlay android:targetPackage="android" android:priority="10" android:isStatic="false"/>
+    <application android:label="Projetor tema" android:hasCode="false"/>
+</manifest>

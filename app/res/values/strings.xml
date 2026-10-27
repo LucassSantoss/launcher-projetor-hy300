@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="key_service_desc">Mostra o volume do controle remoto no estilo do Projetor e informa ao controle do celular qual tela está aberta.</string>
+</resources>

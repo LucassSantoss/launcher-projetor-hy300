@@ -1,0 +1,106 @@
+package com.mlab.instalador;
+
+import java.io.IOException;
+import java.util.Locale;
+
+/**
+ * Os passos da instalacao, sobre uma conexao ADB ja aberta. Nao depende do Android,
+ * entao o mesmo codigo roda no teste do computador.
+ */
+final class Instalacao {
+    static final String PKG = "com.mlab.projetor";
+    static final String HOME = PKG + "/.HomeActivity";
+
+    /** O que foi lido do projetor antes de instalar. */
+    static final class Info {
+        String model, manufacturer, android;
+        int sdk;
+        boolean installed;
+
+        String nome() {
+            String m = model == null || model.isEmpty() ? "Projetor Android" : model;
+            String f = manufacturer == null || manufacturer.isEmpty() ? "" : manufacturer + ", ";
+            return m + " (" + f + "Android " + android + ")";
+        }
+    }
+
+    enum Resultado { OK, INCOMPATIVEL, ANDROID_ANTIGO, OUTRA_VERSAO, VERSAO_MAIS_NOVA, SEM_ESPACO, ERRO }
+
+    static final class Saida {
+        Resultado resultado;
+        String detalhe = "";
+        boolean telaInicial;
+    }
+
+    private Instalacao() {}
+
+    static Info info(AdbClient adb) throws IOException {
+        Info i = new Info();
+        i.model = adb.shell("getprop ro.product.model");
+        i.manufacturer = adb.shell("getprop ro.product.manufacturer");
+        i.android = adb.shell("getprop ro.build.version.release");
+        try {
+            i.sdk = Integer.parseInt(adb.shell("getprop ro.build.version.sdk"));
+        } catch (NumberFormatException e) {
+            i.sdk = 0;
+        }
+        i.installed = false;
+        for (String line : adb.shell("pm list packages " + PKG).split("\n")) {
+            if (line.trim().equals("package:" + PKG)) i.installed = true;
+        }
+        return i;
+    }
+
+    /**
+     * Instala o APK (pela entrada padrao do "cmd package install"), abre o app para ele virar a
+     * tela inicial e confere. Num aparelho incompativel o Android recusa e nada muda.
+     */
+    static Saida instalar(AdbClient adb, Info info, byte[] apk) throws IOException {
+        Saida s = new Saida();
+        if (info.sdk > 0 && info.sdk < 28) {
+            s.resultado = Resultado.ANDROID_ANTIGO;
+            return s;
+        }
+        String out = adb.exec("exec:cmd package install -r -S " + apk.length, apk).trim();
+        s.detalhe = out;
+        if (!out.contains("Success")) {
+            String u = out.toUpperCase(Locale.ROOT);
+            if (u.contains("SHARED_USER_INCOMPATIBLE")) s.resultado = Resultado.INCOMPATIVEL;
+            else if (u.contains("UPDATE_INCOMPATIBLE")) s.resultado = Resultado.OUTRA_VERSAO;
+            else if (u.contains("VERSION_DOWNGRADE")) s.resultado = Resultado.VERSAO_MAIS_NOVA;
+            else if (u.contains("INSUFFICIENT_STORAGE")) s.resultado = Resultado.SEM_ESPACO;
+            else s.resultado = Resultado.ERRO;
+            return s;
+        }
+        s.resultado = Resultado.OK;
+        // Na primeira abertura o proprio app se define como tela inicial e desliga o modo mouse.
+        adb.shell("am start -n " + HOME);
+        for (int i = 0; i < 8 && !s.telaInicial; i++) {
+            sleep(1000);
+            s.telaInicial = telaInicialAtual(adb).startsWith(PKG + "/");
+        }
+        return s;
+    }
+
+    static String telaInicialAtual(AdbClient adb) throws IOException {
+        String out = adb.shell("cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME");
+        String[] l = out.split("\n");
+        return l.length == 0 ? "" : l[l.length - 1].trim();
+    }
+
+    /** Desliga o ADB: a conexao cai logo depois, entao nao espera resposta. */
+    static void desligarAdb(AdbClient adb) {
+        try {
+            adb.shell("settings put global adb_enabled 0");
+        } catch (IOException ignored) {
+        }
+    }
+
+    private static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+}

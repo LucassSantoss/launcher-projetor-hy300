@@ -1,0 +1,7 @@
+build/
+*.apk
+*.jks
+*.keystore
+*.pk8
+*senha*
+keys/

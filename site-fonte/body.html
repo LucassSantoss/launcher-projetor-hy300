@@ -1,0 +1,241 @@
+<!-- ============ HEADER ============ -->
+<header class="header" data-header>
+  <div class="wrap header__inner">
+    <a href="#top" class="logo">Projetor<span>MLAB SOLUCTION</span></a>
+    <nav class="nav">
+      <a href="#instalar">Instalar</a>
+      <a href="#controle">Controle</a>
+      <a href="#remover">Remover</a>
+      <a href="#faq">Dúvidas</a>
+      <a href="#apoie">Apoie</a>
+    </nav>
+    <button class="nav-toggle" data-nav-toggle aria-label="Abrir menu" aria-expanded="false"><span></span></button>
+  </div>
+</header>
+<nav class="nav-mobile" data-nav-mobile>
+  <a href="#instalar">Instalar</a>
+  <a href="#controle">Controle</a>
+  <a href="#remover">Remover</a>
+  <a href="#faq">Dúvidas</a>
+  <a href="#apoie">Apoie</a>
+</nav>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="section hero" style="padding-top:calc(var(--header-h) + var(--section-y))">
+    <div class="wrap hero__grid">
+      <div>
+        <p class="eyebrow" data-reveal>PARA HY300 E PARECIDOS</p>
+        <h1 class="display" data-reveal data-reveal-delay="80">Tela nova e controle no celular</h1>
+        <p class="lead" style="margin-top:var(--s-4)" data-reveal data-reveal-delay="160">Grátis e volta ao original quando quiser</p>
+        <div class="btn-row" style="margin-top:var(--s-5)" data-reveal data-reveal-delay="240">
+          <a href="#instalar" class="btn btn--primary btn--lg">Como instalar</a>
+        </div>
+      </div>
+      <figure class="shot shot--hero" data-reveal data-reveal-delay="200">
+        <img src="passos/06-tela-inicial.webp" width="1280" height="720" alt="Nova tela inicial do projetor" fetchpriority="high">
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ INSTALAR ============ -->
+  <section class="section" id="instalar">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>INSTALAR</p>
+      <h2 data-reveal>Escolha um jeito</h2>
+
+      <div data-tabs style="margin-top:var(--s-5)">
+        <div class="tabs__list" role="tablist" aria-label="Jeitos de instalar">
+          <button class="tabs__tab" role="tab" aria-controls="p-projetor" id="tab-projetor">No projetor</button>
+          <button class="tabs__tab" role="tab" aria-controls="p-celular" id="tab-celular">Android</button>
+          <button class="tabs__tab" role="tab" aria-controls="p-claude" id="tab-claude">Claude Code</button>
+        </div>
+
+        <!-- ---------- No projetor ---------- -->
+        <div class="tabs__panel" role="tabpanel" id="p-projetor" aria-labelledby="tab-projetor">
+          <div class="method-head">
+            <p class="muted">Com um pendrive e o controle do projetor</p>
+            <a href="downloads/Projetor.apk" class="btn btn--ghost" download>Baixar APK</a>
+          </div>
+          <ol class="steps">
+            <li class="step">
+              <div class="step__text">
+                <h3>Copie o APK num pendrive</h3>
+                <p class="subtle">Sem pendrive? Instale o <b>Downloader</b> pela Play Store do projetor e digite <span class="url url--inline" data-short-url>este-site/apk</span></p>
+              </div>
+              <figure class="shot shot--art" aria-label="Ilustração: pendrive ligado no projetor"><svg viewBox="0 0 320 180" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="150" y="50" width="140" height="80" rx="6"/><circle cx="250" cy="90" r="22"/><circle cx="250" cy="90" r="10"/><path d="M170 72h40M170 86h30"/><rect x="150" y="96" width="14" height="10"/>
+  <rect x="30" y="82" width="62" height="34" rx="4"/><path d="M92 90h18v18H92"/><path d="M118 99h22" stroke-dasharray="4 5"/><path d="M134 93l8 6-8 6"/>
+</svg></figure>
+            </li>
+            <li class="step">
+              <div class="step__text"><h3>Abra Arquivos</h3></div>
+              <figure class="shot"><img src="passos/01-tela-original.webp" width="1280" height="720" loading="lazy" alt="Tela de fábrica com o atalho Arquivos"></figure>
+            </li>
+            <li class="step">
+              <div class="step__text"><h3>File → pendrive → Projetor.apk</h3></div>
+              <figure class="shot"><img src="passos/03-arquivo-apk.webp" width="1280" height="720" loading="lazy" alt="Arquivo Projetor.apk selecionado"></figure>
+            </li>
+            <li class="step">
+              <div class="step__text"><h3>Instalar</h3></div>
+              <figure class="shot"><img src="passos/04-instalar.webp" width="588" height="196" loading="lazy" alt="Pergunta de instalação com o botão Instalar"></figure>
+            </li>
+            <li class="step">
+              <div class="step__text"><h3>Abrir</h3><p class="subtle">Pronto, ele vira a tela inicial</p></div>
+              <figure class="shot"><img src="passos/05-instalado.webp" width="588" height="196" loading="lazy" alt="App instalada, com o botão Abrir"></figure>
+            </li>
+          </ol>
+        </div>
+
+        <!-- ---------- Android ---------- -->
+        <div class="tabs__panel" role="tabpanel" id="p-celular" aria-labelledby="tab-celular">
+          <div class="method-head">
+            <p class="muted">Pelo celular, no mesmo Wi‑Fi do projetor</p>
+            <a href="downloads/ProjetorInstalador.apk" class="btn btn--ghost" download>Baixar instalador</a>
+          </div>
+          <ol class="steps steps--phones">
+            <li class="step"><div class="step__text"><h3>Abra e toque em Procurar</h3><p class="subtle">Antes, <a href="#adb" data-open-adb>ligue o ADB no projetor</a>. Se o Android pedir, permita instalar desta fonte</p></div><figure class="phone" aria-label="Ilustração da tela do instalador"><div class="phone__screen"><p class="ph-t">Instalar o Projetor</p><p class="ph-s">Tela nova e controle pelo celular</p><div class="ph-step"><span>1</span>Mesmo Wi‑Fi</div><div class="ph-step"><span>2</span>Depuração USB ligada</div><div class="ph-btn">Procurar projetor</div><p class="ph-s ph-s--sm">Ou digite o IP</p><div class="ph-input">192.168.0.20</div><div class="ph-btn ph-btn--ghost">Conectar</div></div></figure></li>
+            <li class="step"><div class="step__text"><h3>Instalar o Projetor</h3><p class="subtle">No projetor, aceite "Permitir depuração?"</p></div><figure class="phone" aria-label="Ilustração da tela do instalador"><div class="phone__screen"><p class="ph-t">Projetor encontrado</p><p class="ph-b">HY300 (Android 11)</p><p class="ph-s">O app vira a tela inicial. A de fábrica continua lá</p><div class="ph-btn">Instalar o Projetor</div><div class="ph-btn ph-btn--ghost">Cancelar</div></div></figure></li>
+            <li class="step"><div class="step__text"><h3>Pronto</h3><p class="subtle">Desligue o ADB no fim</p></div><figure class="phone" aria-label="Ilustração da tela do instalador"><div class="phone__screen"><p class="ph-t">Pronto</p><p class="ph-b">O Projetor já é a tela inicial</p><p class="ph-s">Recomendado: desligue o acesso ADB</p><div class="ph-btn">Desligar o acesso ADB</div><div class="ph-btn ph-btn--ghost">Deixar ligado</div></div></figure></li>
+          </ol>
+        </div>
+
+        <!-- ---------- Claude Code ---------- -->
+        <div class="tabs__panel" role="tabpanel" id="p-claude" aria-labelledby="tab-claude">
+          <div class="method-head">
+            <p class="muted">Pelo computador, com o <a href="https://claude.com/claude-code" target="_blank" rel="noopener">Claude Code</a></p>
+          </div>
+          <ol class="steps steps--plain">
+            <li class="step"><div class="step__text"><h3>Ligue o ADB no projetor</h3><p class="subtle"><a href="#adb" data-open-adb>Como ligar</a></p></div></li>
+            <li class="step"><div class="step__text"><h3>Cole no Claude Code</h3>
+              <div class="prompt">
+                <pre id="prompt-text" tabindex="0">CARREGANDO</pre>
+                <button type="button" class="btn btn--primary" data-copy="prompt-text">Copiar</button>
+              </div>
+            </div></li>
+            <li class="step"><div class="step__text"><h3>Confirme quando pedir</h3><p class="subtle">No projetor, aceite "Permitir depuração?"</p></div></li>
+          </ol>
+          <p class="subtle" style="margin-top:var(--s-4)">Sem IA: <a href="downloads/projetor-kit-pc.zip" download>kit para Windows</a></p>
+        </div>
+      </div>
+
+      <div data-accordion style="margin-top:var(--s-6)" id="adb">
+        <div class="acc__item">
+          <button class="acc__trigger" aria-expanded="false" aria-controls="adb-p">Como ligar o ADB no projetor<span class="acc__icon"></span></button>
+          <div class="acc__panel" id="adb-p"><div>
+            <ol class="steps steps--adb">
+              <li class="step"><div class="step__text"><h3>Definições → Preferências do dispositivo</h3></div><figure class="shot shot--tall"><img src="passos/adb-1-preferencias.webp" width="560" height="720" loading="lazy" alt="Definições → Preferências do dispositivo"></figure></li>
+              <li class="step"><div class="step__text"><h3>Acerca de</h3></div><figure class="shot shot--tall"><img src="passos/adb-2-acerca.webp" width="560" height="720" loading="lazy" alt="Acerca de"></figure></li>
+              <li class="step"><div class="step__text"><h3>Compilação: OK 7 vezes</h3></div><figure class="shot shot--tall"><img src="passos/adb-3-compilacao.webp" width="560" height="720" loading="lazy" alt="Compilação: OK 7 vezes"></figure></li>
+              <li class="step"><div class="step__text"><h3>Opções de programador → Depuração USB</h3></div><figure class="shot shot--tall"><img src="passos/adb-4-depuracao.webp" width="560" height="720" loading="lazy" alt="Opções de programador → Depuração USB"></figure></li>
+            </ol>
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTROLE ============ -->
+  <section class="section" id="controle">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>CONTROLE</p>
+      <h2 data-reveal>Use o celular</h2>
+      <ol class="steps">
+        <li class="step">
+          <div class="step__text"><h3>Aperte Celular</h3><p class="subtle">Na barra de baixo do projetor</p></div>
+          <figure class="shot"><img src="passos/06-tela-inicial.webp" width="1280" height="720" loading="lazy" alt="Botão Celular na barra de baixo"></figure>
+        </li>
+        <li class="step">
+          <div class="step__text"><h3>Aponte a câmera</h3><p class="subtle">Mesmo Wi‑Fi, iPhone ou Android</p></div>
+          <figure class="shot"><img src="passos/07-qr-celular.webp" width="1280" height="720" loading="lazy" alt="QR code do controle na tela do projetor"></figure>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ REMOVER ============ -->
+  <section class="section" id="remover">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>REMOVER</p>
+      <h2 data-reveal>Voltar ao original</h2>
+      <ol class="steps">
+        <li class="step">
+          <div class="step__text"><h3>Ajustes → Voltar à tela original</h3></div>
+          <figure class="shot"><img src="passos/08-menu-ajustes.webp" width="1280" height="720" loading="lazy" alt="Menu Ajustes"></figure>
+        </li>
+        <li class="step">
+          <div class="step__text"><h3>Remover</h3><p class="subtle">Seus apps continuam lá</p></div>
+          <figure class="shot"><img src="passos/09-remover.webp" width="1280" height="720" loading="lazy" alt="Confirmação para remover o app"></figure>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="section" id="faq">
+    <div class="wrap wrap--narrow">
+      <p class="eyebrow" data-reveal>DÚVIDAS</p>
+      <div data-accordion data-accordion-single style="margin-top:var(--s-4)">
+        <div class="acc__item">
+          <button class="acc__trigger" aria-expanded="false" aria-controls="faq-1">Meu projetor é compatível?<span class="acc__icon"></span></button>
+          <div class="acc__panel" id="faq-1"><div><p>HY300 e parecidos com Android 11. Se não for, aparece "App não instalado" e nada muda</p></div></div>
+        </div>
+        <div class="acc__item">
+          <button class="acc__trigger" aria-expanded="false" aria-controls="faq-2">Funciona com iPhone?<span class="acc__icon"></span></button>
+          <div class="acc__panel" id="faq-2"><div><p>Sim, como controle, pelo Safari</p></div></div>
+        </div>
+        <div class="acc__item">
+          <button class="acc__trigger" aria-expanded="false" aria-controls="faq-3">É seguro?<span class="acc__icon"></span></button>
+          <div class="acc__panel" id="faq-3"><div><p>O controle só funciona no Wi‑Fi de casa e pede um PIN de 6 dígitos só do seu projetor</p></div></div>
+        </div>
+        <div class="acc__item">
+          <button class="acc__trigger" aria-expanded="false" aria-controls="faq-4">O celular não conecta<span class="acc__icon"></span></button>
+          <div class="acc__panel" id="faq-4"><div><p>Use o mesmo Wi‑Fi (não os dados móveis) e abra o QR de novo</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ APOIE ============ -->
+  <section class="section" id="apoie" data-invert>
+    <div class="wrap pix">
+      <div>
+        <p class="eyebrow" data-reveal>APOIE</p>
+        <h2 data-reveal>Gostou? Mande um Pix</h2>
+        <p class="subtle" style="margin-top:var(--s-4)">Chave: <b class="pix__key">81f210cf-f1fe-42b5-8fda-ba0b97971ee9</b></p>
+        <pre id="pix-code" class="pix__code">__PIXCODE__</pre>
+        <div class="btn-row" style="margin-top:var(--s-3)"><button type="button" class="btn btn--primary" data-copy="pix-code">Copiar Pix</button></div>
+      </div>
+      <figure class="pix__qr" data-reveal>__PIXSVG__<figcaption class="subtle">App do banco → Pix → Ler QR</figcaption></figure>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="foot">
+      <div class="foot__brand">
+        <a href="#top" class="logo">Projetor<span>MLAB SOLUCTION</span></a>
+        <p class="subtle">Tela nova e controle no celular para o seu projetor</p>
+      </div>
+      <nav class="foot__col" aria-label="Seções">
+        <p class="badge">Guia</p>
+        <a href="#instalar">Instalar</a><a href="#controle">Controle</a><a href="#remover">Remover</a><a href="#faq">Dúvidas</a><a href="#apoie">Apoie</a>
+      </nav>
+      <div class="foot__col">
+        <p class="badge">Downloads</p>
+        <a href="downloads/Projetor.apk" download>Projetor · v__VERSAO__</a>
+        <a href="downloads/ProjetorInstalador.apk" download>Instalador Android · v1.0.0</a>
+        <a href="downloads/projetor-kit-pc.zip" download>Kit para Windows</a>
+      </div>
+    </div>
+    <details class="foot__hash"><summary>Conferir o arquivo (SHA-256)</summary><code>__SHA256__</code></details>
+    <div class="footer__bottom">
+      <span>&copy; <span data-year></span> MLAB SOLUCTION</span>
+      <span>Sem vínculo com os fabricantes · Sem garantia</span>
+    </div>
+  </div>
+</footer>
