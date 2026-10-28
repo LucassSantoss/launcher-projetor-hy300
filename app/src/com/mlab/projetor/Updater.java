@@ -60,6 +60,8 @@ final class Updater {
     private static final Handler main = new Handler(Looper.getMainLooper());
     private static volatile Info available;
     private static volatile boolean installing;
+    private static volatile Info installingInfo;
+    private static volatile Listener installListener;
 
     private Updater() {}
 
@@ -134,8 +136,9 @@ final class Updater {
     static void install(final Context c, final Info i, final Listener l) {
         if (installing) return;
         installing = true;
+        installingInfo = i;
+        installListener = l;
         worker.execute(() -> {
-            String err = null;
             File apk = new File(c.getCacheDir(), "atualizacao.apk");
             try {
                 download(i, apk);
@@ -151,19 +154,59 @@ final class Updater {
                         while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
                         s.fsync(out);
                     }
-                    Intent done = new Intent("com.mlab.projetor.ATUALIZADO").setPackage(c.getPackageName());
-                    PendingIntent pend = PendingIntent.getBroadcast(c, 1, done, PendingIntent.FLAG_IMMUTABLE);
+                    Intent done = new Intent(c, UpdateReceiver.class);
+                    int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+                    // FLAG_MUTABLE e API 31; o build ainda compila com android-30.
+                    if (android.os.Build.VERSION.SDK_INT >= 31) flags |= 0x02000000;
+                    PendingIntent pend = PendingIntent.getBroadcast(c, id, done, flags);
                     s.commit(pend.getIntentSender());
                 }
             } catch (Exception e) {
                 Log.w(TAG, "atualizacao falhou", e);
-                err = e instanceof SecurityException ? "O arquivo baixado não confere. Nada foi instalado." : "Não foi possível baixar a atualização";
-                installing = false;
                 //noinspection ResultOfMethodCallIgnored
                 apk.delete();
+                finishInstall(e instanceof SecurityException ? "O arquivo baixado não confere. Nada foi instalado."
+                        : "Não foi possível baixar a atualização");
             }
-            final String e2 = err;
-            if (e2 != null) main.post(() -> l.onResult(i, e2));
+        });
+    }
+
+    /** Resultado assincrono enviado pelo PackageInstaller depois de commit(). */
+    static void onInstallResult(Context c, Intent result) {
+        int status = result.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE);
+        if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
+            Intent confirm = result.getParcelableExtra(Intent.EXTRA_INTENT);
+            try {
+                if (confirm == null) throw new IllegalStateException("confirmacao ausente");
+                c.startActivity(confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            } catch (Exception e) {
+                Log.w(TAG, "nao foi possivel confirmar a atualizacao", e);
+                finishInstall("A atualização precisa de confirmação no projetor");
+            }
+            return;
+        }
+        //noinspection ResultOfMethodCallIgnored
+        new File(c.getCacheDir(), "atualizacao.apk").delete();
+        if (status == PackageInstaller.STATUS_SUCCESS) {
+            finishInstall(null);
+            return;
+        }
+        String detail = result.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE);
+        finishInstall(detail == null || detail.trim().isEmpty()
+                ? "Não foi possível instalar a atualização"
+                : "Não foi possível instalar a atualização: " + detail);
+    }
+
+    private static void finishInstall(String error) {
+        installing = false;
+        Info info = installingInfo;
+        Listener listener = installListener;
+        installingInfo = null;
+        installListener = null;
+        if (error == null) return;
+        main.post(() -> {
+            if (listener != null) listener.onResult(info, error);
+            else if (App.inst != null && App.inst.controller != null) App.inst.controller.hud.message(error);
         });
     }
 

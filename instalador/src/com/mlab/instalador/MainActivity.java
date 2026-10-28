@@ -62,8 +62,8 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        worker.shutdownNow();
         fechar();
+        worker.shutdownNow();
         super.onDestroy();
     }
 
@@ -259,14 +259,14 @@ public class MainActivity extends Activity {
         final AdbClient c = adb;
         adb = null;
         worker.execute(() -> {
-            if (c != null) {
-                Instalacao.desligarAdb(c);
-                c.close();
-            }
+            final boolean desligado = c != null && Instalacao.desligarAdb(c);
             runOnUiThread(() -> {
                 limpar("fim");
-                titulo("Tudo certo");
-                texto("Acesso ADB desligado. Para remover o app no futuro, use Ajustes → Voltar à tela original, no projetor.", INK2, 16);
+                titulo(desligado ? "Tudo certo" : "Confira o acesso ADB");
+                texto(desligado
+                        ? "Acesso ADB desligado. Para remover o app no futuro, use Ajustes → Voltar à tela original, no projetor."
+                        : "Não foi possível confirmar que o ADB desligou. Confira em Opções do desenvolvedor e use apenas uma rede Wi‑Fi de confiança.",
+                        INK2, 16);
                 espaco(28);
                 botao("Fechar", true, v -> finish());
             });
@@ -327,7 +327,7 @@ public class MainActivity extends Activity {
     private void fechar() {
         AdbClient c = adb;
         adb = null;
-        if (c != null) worker.execute(c::close);
+        if (c != null) c.close();
     }
 
     // ---- Componentes (preto e branco, como o site) ----

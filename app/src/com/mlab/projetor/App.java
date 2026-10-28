@@ -55,6 +55,7 @@ public class App extends Application {
      * - liga o KeyService, que mostra o volume do controle fisico no aviso do app.
      */
     private void takeOverSystemUi() {
+        if (!saveSystemState()) return;
         try {
             getPackageManager().setComponentEnabledSetting(
                     new ComponentName("com.sxk.testdsndpi", "com.sxk.testdsndpi.MyService"),
@@ -83,6 +84,22 @@ public class App extends Application {
         } catch (Exception e) {
             Log.w("Projetor", "nao foi possivel ligar o KeyService", e);
         }
+    }
+
+    /** Versoes antigas ja alteraram estes ajustes e nao conseguem mais descobrir o estado anterior. */
+    private boolean saveSystemState() {
+        if (Prefs.systemStateSaved(this) || Prefs.homeClaimed(this)) return true;
+        try {
+            ContentResolver cr = getContentResolver();
+            String services = Settings.Secure.getString(cr, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+            int accessibility = Settings.Secure.getInt(cr, Settings.Secure.ACCESSIBILITY_ENABLED, 0);
+            int mouse = getPackageManager().getComponentEnabledSetting(Sistema.MOUSE_SVC);
+            if (Prefs.saveSystemState(this, services, accessibility, mouse)) return true;
+        } catch (Exception e) {
+            Log.w("Projetor", "nao foi possivel guardar os ajustes originais", e);
+        }
+        Log.e("Projetor", "ajustes originais nao foram guardados; sistema nao sera alterado");
+        return false;
     }
 
     /**

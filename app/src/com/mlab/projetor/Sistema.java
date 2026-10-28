@@ -131,6 +131,35 @@ final class Sistema {
 
     private static void restoreSystem(Context c) {
         ContentResolver cr = c.getContentResolver();
+        if (Prefs.systemStateSaved(c)) {
+            try {
+                c.getPackageManager().setComponentEnabledSetting(MOUSE_SVC, Prefs.originalMouseState(c),
+                        PackageManager.DONT_KILL_APP);
+            } catch (Exception e) {
+                Log.w(TAG, "nao foi possivel restaurar o componente do modo mouse", e);
+            }
+            try {
+                Settings.Secure.putString(cr, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+                        Prefs.originalAccessibilityServices(c));
+                Settings.Secure.putInt(cr, Settings.Secure.ACCESSIBILITY_ENABLED,
+                        Prefs.originalAccessibilityEnabled(c));
+            } catch (Exception e) {
+                Log.w(TAG, "nao foi possivel restaurar a acessibilidade", e);
+            }
+        } else {
+            restoreLegacyAccessibility(c, cr);
+        }
+        try {
+            // Volta o decodificador de audio ao padrao (vazio = valor de fabrica).
+            Class<?> sp = Class.forName("android.os.SystemProperties");
+            sp.getMethod("set", String.class, String.class).invoke(null, "debug.stagefright.ccodec", "");
+        } catch (Exception e) {
+            Log.w(TAG, "nao foi possivel desfazer o ajuste da Netflix", e);
+        }
+    }
+
+    /** Instalacoes anteriores nao guardavam o estado original; mantem a restauracao antiga. */
+    private static void restoreLegacyAccessibility(Context c, ContentResolver cr) {
         String mine = new ComponentName(c, KeyService.class).flattenToString();
         boolean mouse = hasMouseMode(c);
         try {
@@ -155,13 +184,6 @@ final class Sistema {
             if (list.length() == 0) Settings.Secure.putInt(cr, Settings.Secure.ACCESSIBILITY_ENABLED, 0);
         } catch (Exception e) {
             Log.w(TAG, "nao foi possivel restaurar o modo mouse", e);
-        }
-        try {
-            // Volta o decodificador de audio ao padrao (vazio = valor de fabrica).
-            Class<?> sp = Class.forName("android.os.SystemProperties");
-            sp.getMethod("set", String.class, String.class).invoke(null, "debug.stagefright.ccodec", "");
-        } catch (Exception e) {
-            Log.w(TAG, "nao foi possivel desfazer o ajuste da Netflix", e);
         }
     }
 
