@@ -211,12 +211,16 @@ final class Controller {
     }
 
     /**
-     * Injeta a tecla como se viesse do controle remoto (dispositivo real, origem "direcional").
-     * Apps como a Netflix ignoram setas de origem generica (dispositivo -1, so "teclado").
+     * Injeta a tecla como se viesse do controle remoto (dispositivo real).
+     * Setas e OK saem com origem so "direcional": a Netflix ignora setas que chegam como
+     * "teclado" ou "teclado + direcional" (testado no HY300: so SOURCE_DPAD move a selecao).
      */
     private void sendRemoteKey(int code) {
         int dev = remoteDevice();
-        int src = InputDevice.SOURCE_KEYBOARD | InputDevice.SOURCE_DPAD;
+        boolean dpad = code == KeyEvent.KEYCODE_DPAD_UP || code == KeyEvent.KEYCODE_DPAD_DOWN
+                || code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT
+                || code == KeyEvent.KEYCODE_DPAD_CENTER;
+        int src = dpad ? InputDevice.SOURCE_DPAD : InputDevice.SOURCE_KEYBOARD;
         long down = SystemClock.uptimeMillis();
         inst.sendKeySync(new KeyEvent(down, down, KeyEvent.ACTION_DOWN, code, 0, 0, dev, 0, KeyEvent.FLAG_FROM_SYSTEM, src));
         inst.sendKeySync(new KeyEvent(down, SystemClock.uptimeMillis(), KeyEvent.ACTION_UP, code, 0, 0, dev, 0,
@@ -289,7 +293,8 @@ final class Controller {
             if (!ensureCursor()) return;
             cx = clamp(cx + dx, 0, sw - 1);
             float ny = cy + dy;
-            if ((ny > sh - 1 || ny < 0) && "web".equals(profile(screenPkg))) {
+            String prof = profile(screenPkg);
+            if ((ny > sh - 1 || ny < 0) && ("web".equals(prof) || "toque".equals(prof))) {
                 // Cursor encostado na borda (so em navegador): empurrar com vontade rola a pagina,
                 // no maximo uma vez a cada 0,7 s, para nao "descer sem parar".
                 edgePush += ny > sh - 1 ? ny - (sh - 1) : ny;
@@ -561,7 +566,7 @@ final class Controller {
     /** OK num app de video: o titulo focado passa a ser o que esta sendo assistido. */
     void onSelect() {
         String pkg = screenPkg, focus = screenFocus;
-        if (!"video".equals(profile(pkg)) || focus.isEmpty() || pkg.equals(ctx.getPackageName())) return;
+        if (!watchable(pkg) || focus.isEmpty() || pkg.equals(ctx.getPackageName())) return;
         watch(pkg, focus);
     }
 
@@ -588,7 +593,7 @@ final class Controller {
             screenFocus = "";
             // A TV ao vivo (o proprio app) conta os canais por conta propria.
             if (!pkg.equals(ctx.getPackageName())) {
-                if ("video".equals(profile(pkg))) watch(pkg, null);
+                if (watchable(pkg)) watch(pkg, null);
                 else stopWatch();
             } else if (!TvActivity.visible) {
                 stopWatch(); // voltou para a tela inicial
@@ -604,11 +609,15 @@ final class Controller {
         if (l != null) l.onScreenChanged(screenJson());
     }
 
-    /** inicio (nossa tela inicial), video (apps de streaming), web (navegadores) ou geral. */
+    /**
+     * inicio (nossa tela inicial), video (apps de streaming), web (navegadores), toque (app de
+     * celular sem versao de TV, ex.: a Netflix de celular que vem no HY300: so anda com cursor) ou geral.
+     */
     static String profile(String pkg) {
         if ("com.mlab.projetor".equals(pkg) && TvActivity.visible) return "video";
         if (pkg == null || pkg.isEmpty() || pkg.equals("com.mlab.projetor")) return "inicio";
         if (pkg.contains("browser") || pkg.contains("chrome") || pkg.contains("webview")) return "web";
+        if (touchOnly(pkg)) return "toque";
         if (pkg.contains("youtube") || pkg.contains("netflix") || pkg.contains("disney") || pkg.contains("amazonvideo")
                 || pkg.contains("globo") || pkg.contains("spotify") || pkg.contains("espn") || pkg.contains("TvdVideo")
                 || pkg.contains("gallery") || pkg.contains("hbo") || pkg.contains("paramount")
@@ -618,8 +627,37 @@ final class Controller {
         return "geral";
     }
 
+    private static final java.util.Map<String, Boolean> touchCache = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** App sem entrada no menu da TV (LEANBACK_LAUNCHER) = feito para celular, navega por toque. */
+    private static boolean touchOnly(String pkg) {
+        Boolean v = touchCache.get(pkg);
+        if (v != null) return v;
+        boolean touch = false;
+        try {
+            android.content.pm.PackageManager pm = App.inst.getPackageManager();
+            Intent tv = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER).setPackage(pkg);
+            Intent phone = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(pkg);
+            touch = pm.queryIntentActivities(tv, 0).isEmpty() && !pm.queryIntentActivities(phone, 0).isEmpty();
+        } catch (RuntimeException ignored) {
+        }
+        touchCache.put(pkg, touch);
+        return touch;
+    }
+
+    /** Apps em que vale guardar "o que estava assistindo" (Recentes). */
+    static boolean watchable(String pkg) {
+        String p = profile(pkg);
+        return "video".equals(p) || ("toque".equals(p) && (pkg.contains("netflix") || pkg.contains("globo")
+                || pkg.contains("disney") || pkg.contains("amazon") || pkg.contains("youtube")));
+    }
+
+    /**
+     * App em primeiro plano. Pergunta ao Android primeiro (o app e de sistema, entao ve os outros
+     * apps): neste aparelho os eventos de acessibilidade dos outros apps nao chegam, e o screenPkg
+     * ficava parado na tela inicial.
+     */
     private String currentPkg() {
-        if (!screenPkg.isEmpty()) return screenPkg;
         try {
             ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
             @SuppressWarnings("deprecation")
@@ -627,7 +665,7 @@ final class Controller {
             if (!t.isEmpty() && t.get(0).topActivity != null) return t.get(0).topActivity.getPackageName();
         } catch (Exception ignored) {
         }
-        return "";
+        return screenPkg;
     }
 
     private String screenJson() {

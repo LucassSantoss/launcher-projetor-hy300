@@ -112,7 +112,7 @@ public class MainActivity extends Activity {
             }
             conectar(s);
         });
-        rodape("Versão do Projetor incluída: 4.4.0");
+        rodape("Versão do Projetor incluída: 4.5.3");
     }
 
     private void procurar() {

@@ -621,9 +621,10 @@ input[type=file]{display:none}
     var p = s.perfil || 'geral';
     if (p === profile) return;
     profile = p;
-    setMode(p === 'web' ? 'cur' : 'nav');
-    $('#scroll').hidden = p !== 'web';
-    $('#media').hidden = p !== 'video';
+    // web e toque (app de celular, ex. a Netflix de celular): cursor; video: setas + midia
+    setMode(p === 'web' || p === 'toque' ? 'cur' : 'nav');
+    $('#scroll').hidden = !(p === 'web' || p === 'toque');
+    $('#media').hidden = !(p === 'video' || p === 'toque');
   }
 
   // ---- Favoritos e estado ----
