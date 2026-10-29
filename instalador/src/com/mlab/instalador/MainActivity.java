@@ -344,8 +344,6 @@ public class MainActivity extends Activity {
                 botao("Instalar versão compatível (controle limitado)", true, v -> instalarCompat());
                 botao("Voltar ao início", false, v -> inicio());
                 return;
-                erro("Incompatível", "O sistema recusou o app (Erro: " + s.codigoErro + ").", s.codigoErro);
-                return;
             case ANDROID_ANTIGO:
                 erro("Android Antigo", "Requer Android 9+.", "ERR_ANDROID_OLD");
                 return;
