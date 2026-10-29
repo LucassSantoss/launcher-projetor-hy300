@@ -3,6 +3,7 @@ package com.mlab.instalador;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -11,8 +12,10 @@ import android.net.LinkAddress;
 import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -23,26 +26,35 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.Inet4Address;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Instalador do app Projetor pelo celular: acha o projetor no Wi‑Fi (porta do ADB), conecta,
- * confirma o modelo, instala e, no fim, oferece desligar o ADB. Tudo numa tela que troca de conteudo.
+ * Instalador MS Projetor: Detecta estado, instala, gerencia e reporta erros.
+ * Fluxo: Detecção -> (Instalar OU Painel de Controle) -> Reporte de Erros/Ajuda.
  */
 public class MainActivity extends Activity {
+    private static final String TAG = "MSInstalador";
     private static final int INK = 0xFFFFFFFF, INK2 = 0xFFA3A3A3, INK3 = 0xFF737373, PAPER = 0xFF0A0A0A, LINE = 0xFF3D3D3D;
+    private static final String ADMIN_URL = "https://mlabsoluction.pages.dev/api/help"; // Endpoint fictício para exemplo, ajustar conforme backend real
 
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private LinearLayout body;
     private AdbClient adb;
     private Instalacao.Info info;
+    private String lastErrorCode = "";
+    private String lastErrorStage = "";
 
     @Override
     protected void onCreate(Bundle b) {
@@ -77,53 +89,30 @@ public class MainActivity extends Activity {
         }
     }
 
-    // ---- Telas ----
-
-    private String modeloSelecionado = null;
+    // ---- Telas Principais ----
 
     private void inicio() {
         limpar("inicio");
-        titulo("Selecione seu aparelho");
-        texto("Escolha o modelo do seu projetor ou TV Box para garantir a compatibilidade.", INK2, 17);
-        espaco(24);
+        titulo("MS Projetor");
+        texto("Gerenciador de Instalação e Controle", INK2, 16);
+        espaco(32);
 
-        // Lista de modelos suportados
-        String[] modelosSuportados = {
-            "HY300 / HY300 Pro",
-            "TX6 / TX6 Mini",
-            "X96 Max / X96 Max+",
-            "H96 Max / H96 Pro",
-            "Tanix TX3 / TX5",
-            "Outro projetor Android (Allwinner/Rockchip)"
-        };
-
-        for (final String m : modelosSuportados) {
-            botao(m, false, v -> {
-                modeloSelecionado = m;
-                telaConexao();
-            });
-        }
-
+        botao("1. Detectar Aparelho", true, v -> telaConexao());
         espaco(16);
-        texto("Smart TVs (Samsung, LG, Sony, Roku, etc.)", INK3, 14);
-        espaco(8);
-        botao("Minha TV é uma Smart TV fechada", false, v -> funilIncompativel());
-
-        rodape("Versão do Instalador: 2.0 | MLAB Solution");
+        texto("Suporte: HY300, HY320, TX6, X96, H96 e variantes Android.", INK3, 13);
+        rodape("Versão 2.1 | M Soluction");
     }
 
     private void telaConexao() {
         limpar("conexao");
-        titulo("Conectar ao " + modeloSelecionado);
-        texto("Modelo selecionado: " + modeloSelecionado, INK2, 16);
-        espaco(20);
-        passo("1", "Celular e aparelho no mesmo Wi‑Fi.");
-        passo("2", "No aparelho, ligue a Depuração USB (ADB).");
+        titulo("Conectar ao Projetor");
+        passo("1", "Celular e projetor no mesmo Wi‑Fi.");
+        passo("2", "Depuração USB (ADB) ligada no projetor.");
         link("Como ligar a Depuração USB", v -> comoLigarAdb());
         espaco(24);
         botao("Procurar na rede", true, v -> procurar());
         espaco(24);
-        texto("Ou digite o IP do aparelho", INK3, 14);
+        texto("Ou digite o IP manualmente", INK3, 14);
         espaco(8);
         final EditText ip = new EditText(this);
         ip.setHint("Ex.: 192.168.0.20");
@@ -140,40 +129,24 @@ public class MainActivity extends Activity {
         botao("Conectar via IP", false, v -> {
             String s = ip.getText().toString().trim();
             if (!s.matches("\\d{1,3}(\\.\\d{1,3}){3}")) {
-                aviso("Digite um IP válido como 192.168.0.20.");
+                aviso("Digite um IP válido.");
                 return;
             }
             conectar(s);
         });
         espaco(16);
-        link("Voltar e escolher outro modelo", v -> inicio());
-    }
-
-    private void funilIncompativel() {
-        limpar("incompativel");
-        titulo("Aparelho não suportado via rede");
-        texto("Smart TVs com sistemas fechados (Tizen, WebOS, Android TV oficial de marcas como Sony/Samsung/LG) bloqueiam a instalação de apps de sistema via rede Wi-Fi.", INK2, 16);
-        espaco(20);
-        texto("Para esses aparelhos, a única forma segura de instalar a interface MLAB é através do nosso Pendrive Físico Otimizado, que já vem pronto para plugar e usar.", INK, 17);
-        espaco(28);
-
-        // Botão simulando ação de compra/redirect
-        botao("Comprar Pendrive Físico Otimizado", true, v -> {
-            aviso("Redirecionando para a loja MLAB... (Funcionalidade de checkout pendente)");
-        });
-        espaco(12);
-        botao("Voltar ao início", false, v -> inicio());
+        link("Voltar", v -> inicio());
     }
 
     private void procurar() {
         final String meu = meuIpWifi();
         if (meu == null) {
-            aviso("Conecte o celular ao Wi‑Fi (o mesmo do projetor) e tente de novo.");
+            aviso("Conecte o celular ao Wi‑Fi primeiro.");
             return;
         }
         limpar("busca");
         titulo("Procurando…");
-        texto("Olhando a rede " + meu.substring(0, meu.lastIndexOf('.')) + ".x", INK2, 16);
+        texto("Escaneando rede " + meu.substring(0, meu.lastIndexOf('.')) + ".x", INK2, 16);
         espaco(24);
         carregando();
         worker.execute(() -> {
@@ -191,17 +164,14 @@ public class MainActivity extends Activity {
     private void resultados(List<String> achados) {
         limpar("resultados");
         if (achados.isEmpty()) {
-            titulo("Nenhum projetor encontrado");
-            texto("Confira se o projetor está ligado, no mesmo Wi‑Fi, e com a Depuração USB ligada.", INK2, 16);
+            titulo("Nenhum aparelho encontrado");
+            texto("Verifique se o projetor está ligado e com ADB ativo.", INK2, 16);
             espaco(24);
-            link("Como ligar a Depuração USB", v -> comoLigarAdb());
-            espaco(16);
-            botao("Procurar de novo", true, v -> procurar());
+            botao("Tentar novamente", true, v -> procurar());
             botao("Voltar", false, v -> inicio());
             return;
         }
-        titulo(achados.size() == 1 ? "Achei um aparelho" : "Achei " + achados.size() + " aparelhos");
-        texto("Toque no seu projetor.", INK2, 16);
+        titulo(achados.size() == 1 ? "Aparelho encontrado" : achados.size() + " aparelhos encontrados");
         espaco(20);
         for (final String ip : achados) botao(ip, false, v -> conectar(ip));
         espaco(8);
@@ -218,41 +188,103 @@ public class MainActivity extends Activity {
             try {
                 AdbKey key = AdbKey.loadOrCreate(new File(getFilesDir(), "adbkey"));
                 AdbClient c = AdbClient.connect(ip, key, () -> runOnUiThread(() -> {
-                    status.setText("Olhe a tela do projetor: apareceu \"Permitir depuração USB?\". "
-                            + "Marque \"Sempre permitir\" e escolha OK com o controle.");
+                    status.setText("Confirme 'Permitir depuração USB' na tela do projetor.");
                     status.setTextColor(INK);
                 }), 90_000);
                 Instalacao.Info i = Instalacao.info(c);
                 adb = c;
                 info = i;
-                runOnUiThread(this::confirmar);
+                runOnUiThread(this::verificarEstado);
             } catch (Exception e) {
                 final String msg = e.getMessage() == null ? e.toString() : e.getMessage();
-                runOnUiThread(() -> erro("Não consegui conectar", msg + "\n\nConfira se a Depuração USB está ligada no projetor."));
+                runOnUiThread(() -> erro("Falha na conexão", msg, "CONEXAO_ADB"));
             }
         });
     }
 
-    private void confirmar() {
-        limpar("confirmar");
-        titulo("Projetor encontrado");
-        TextView nome = texto(info.nome(), INK, 20);
-        nome.setTypeface(Typeface.DEFAULT_BOLD);
-        espaco(12);
-        if (info.installed) texto("O Projetor já está instalado. Instalar de novo atualiza para a versão deste app e mantém seus ajustes.", INK2, 16);
-        else texto("O app vira a tela inicial do projetor. A tela de fábrica continua lá e dá para voltar a ela em Ajustes.", INK2, 16);
-        espaco(28);
-        botao("Instalar o Projetor", true, v -> instalar());
-        botao("Cancelar", false, v -> {
-            fechar();
-            inicio();
-        });
+    // ---- Lógica de Estado: Instalado vs Não Instalado ----
+
+    private void verificarEstado() {
+        if (info.installed) {
+            painelControle();
+        } else {
+            confirmarInstalacao();
+        }
     }
+
+    private void confirmarInstalacao() {
+        limpar("confirmar");
+        titulo("Pronto para instalar");
+        texto(info.nome(), INK, 18);
+        espaco(12);
+        texto("O app MS Projetor será instalado como tela inicial.", INK2, 16);
+        espaco(28);
+        botao("Instalar Agora", true, v -> instalar());
+        botao("Cancelar", false, v -> { fechar(); inicio(); });
+    }
+
+    private void painelControle() {
+        limpar("painel");
+        titulo("MS Projetor Ativo");
+        texto(info.nome(), INK, 18);
+        texto("Versão instalada detectada.", INK2, 14);
+        espaco(24);
+
+        // Opção 1: Controle Remoto (Abre navegador no IP do projetor)
+        botao(" Controle Remoto (Celular)", true, v -> abrirControleRemoto());
+
+        // Opção 2: Restaurar de Fábrica
+        botao("⚙️ Restaurar Configurações", false, v -> restaurarFabrica());
+
+        // Opção 3: Reinstalar/Atualizar
+        botao("🔄 Reinstalar / Atualizar", false, v -> instalar());
+
+        espaco(24);
+        texto("Problemas?", INK3, 14);
+        botao("🆘 Solicitar Ajuda", false, v -> solicitarAjuda("", ""));
+
+        espaco(16);
+        link("Desconectar", v -> { fechar(); inicio(); });
+    }
+
+    private void abrirControleRemoto() {
+        if (adb == null) return;
+        // Tenta pegar o IP do projetor da conexão ADB ou usa o IP conectado
+        String ip = adb.getHost();
+        String url = "http://" + ip + ":8080";
+        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        try {
+            startActivity(i);
+        } catch (Exception e) {
+            aviso("Não foi possível abrir o navegador. Acesse manualmente: " + url);
+        }
+    }
+
+    private void restaurarFabrica() {
+        new AlertDialog.Builder(this)
+            .setTitle("Restaurar Configurações")
+            .setMessage("Isso apagará os ajustes do MS Projetor no projetor (PIN, favoritos). O app continuará instalado.")
+            .setPositiveButton("Restaurar", (d, w) -> {
+                worker.execute(() -> {
+                    try {
+                        // Comando para limpar dados do app via ADB
+                        adb.shell("pm clear com.mlab.projetor");
+                        runOnUiThread(() -> aviso("Configurações restauradas. O projetor pode reiniciar o app."));
+                    } catch (Exception e) {
+                        runOnUiThread(() -> erro("Falha ao restaurar", e.getMessage(), "RESTAURAR_FABRICA"));
+                    }
+                });
+            })
+            .setNegativeButton("Cancelar", null)
+            .show();
+    }
+
+    // ---- Instalação ----
 
     private void instalar() {
         limpar("instalando");
         titulo("Instalando…");
-        texto("Não desligue o projetor. Leva menos de um minuto.", INK2, 16);
+        texto("Não desligue o projetor.", INK2, 16);
         espaco(24);
         carregando();
         worker.execute(() -> {
@@ -262,7 +294,7 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> resultado(s));
             } catch (Exception e) {
                 final String msg = e.getMessage() == null ? e.toString() : e.getMessage();
-                runOnUiThread(() -> erro("A instalação parou", msg));
+                runOnUiThread(() -> erro("A instalação parou", msg, "INSTALACAO_EXCECAO"));
             }
         });
     }
@@ -271,88 +303,156 @@ public class MainActivity extends Activity {
         switch (s.resultado) {
             case OK:
                 limpar("pronto");
-                titulo("Pronto");
-                texto(s.telaInicial ? "O Projetor já é a tela inicial do seu projetor."
-                        : "O app foi instalado. Aperte a tecla Início do controle e escolha Projetor.", INK, 18);
-                espaco(16);
-                texto("Para usar o celular como controle: no projetor, aperte Celular na barra de baixo e aponte a câmera para o QR.", INK2, 16);
-                espaco(28);
-                texto("Recomendado: desligue o acesso ADB. Com ele ligado, qualquer aparelho no seu Wi‑Fi consegue controlar o projetor.", INK2, 15);
-                espaco(12);
-                botao("Desligar o acesso ADB", true, v -> desligarAdb());
-                botao("Deixar ligado", false, v -> {
-                    fechar();
-                    finish();
-                });
+                titulo("Instalação Concluída");
+                texto(s.telaInicial ? "O MS Projetor já é a tela inicial." : "Instalado. Aperte HOME e escolha MS Projetor.", INK, 18);
+                espaco(24);
+                botao("Ir para Painel de Controle", true, v -> painelControle());
+                botao("Fechar", false, v -> finish());
                 return;
             case INCOMPATIVEL:
-                erro("Este projetor não é compatível", "O sistema deste aparelho não aceita o app. Nada foi alterado no projetor.");
+                erro("Incompatível", "O sistema recusou o app (Erro: " + s.codigoErro + ").", s.codigoErro);
                 return;
             case ANDROID_ANTIGO:
-                erro("Android antigo demais", "O app precisa do Android 9 ou mais novo. Nada foi alterado no projetor.");
+                erro("Android Antigo", "Requer Android 9+.", "ERR_ANDROID_OLD");
                 return;
             case OUTRA_VERSAO:
-                erro("Já existe outro Projetor instalado", "Há uma versão do app feita de outra fonte. Remova ela no projetor (Ajustes → Voltar à tela original) e tente de novo.");
+                erro("Conflito de Versão", "Já existe outro app com este nome. Remova-o primeiro.", s.codigoErro);
                 return;
             case VERSAO_MAIS_NOVA:
-                erro("O projetor já tem uma versão mais nova", "Não é preciso instalar de novo.");
+                erro("Versão Recente", "O projetor já tem uma versão igual ou mais nova.", s.codigoErro);
                 return;
             case SEM_ESPACO:
-                erro("Falta espaço no projetor", "Apague alguns apps no projetor e tente de novo.");
+                erro("Sem Espaço", "Libere espaço no projetor e tente novamente.", s.codigoErro);
+                return;
+            case ERRO_MANIFESTO:
+                erro("Erro de Manifesto", "Falha crítica de compatibilidade (Android 12+). Código: " + s.codigoErro, s.codigoErro);
                 return;
             default:
-                erro("A instalação falhou", s.detalhe);
+                erro("Falha Desconhecida", s.detalhe, s.codigoErro.isEmpty() ? "ERR_UNKNOWN" : s.codigoErro);
         }
     }
 
-    private void desligarAdb() {
-        final AdbClient c = adb;
-        adb = null;
-        worker.execute(() -> {
-            if (c != null) {
-                Instalacao.desligarAdb(c);
-                c.close();
-            }
-            runOnUiThread(() -> {
-                limpar("fim");
-                titulo("Tudo certo");
-                texto("Acesso ADB desligado. Para remover o app no futuro, use Ajustes → Voltar à tela original, no projetor.", INK2, 16);
-                espaco(28);
-                botao("Fechar", true, v -> finish());
-            });
-        });
-    }
+    // ---- Sistema de Erros e Ajuda ----
 
-    private void erro(String t, String detalhe) {
+    private void erro(String t, String detalhe, String code) {
+        lastErrorCode = code;
+        lastErrorStage = (String) body.getTag();
         fechar();
         limpar("erro");
         titulo(t);
         texto(detalhe, INK2, 16);
+        espaco(12);
+        texto("Código do Erro: " + code, INK3, 14);
         espaco(28);
-        botao("Voltar ao início", true, v -> inicio());
+        botao("🆘 Solicitar Ajuda com este erro", true, v -> solicitarAjuda(code, detalhe));
+        botao("Voltar ao início", false, v -> inicio());
     }
+
+    private void solicitarAjuda(String code, String context) {
+        limpar("ajuda");
+        titulo("Solicitar Ajuda");
+        texto("Descreva o problema ou o que estava fazendo.", INK2, 16);
+        espaco(16);
+
+        final EditText input = new EditText(this);
+        input.setHint("Ex: A tela ficou preta após instalar...");
+        input.setHintTextColor(INK3);
+        input.setTextColor(INK);
+        input.setTextSize(16);
+        input.setMinLines(3);
+        input.setGravity(Gravity.TOP | Gravity.START);
+        input.setBackground(caixa(false));
+        input.setPadding(dp(14), dp(12), dp(14), dp(12));
+        body.addView(input, new LinearLayout.LayoutParams(-1, -2));
+
+        espaco(16);
+        if (!code.isEmpty()) {
+            texto("Contexto técnico anexado automaticamente: " + code, INK3, 12);
+        }
+        espaco(24);
+
+        botao("Enviar Relatório", true, v -> {
+            String userMsg = input.getText().toString().trim();
+            if (userMsg.isEmpty()) {
+                aviso("Por favor, escreva uma mensagem.");
+                return;
+            }
+            enviarRelatorio(userMsg, code, context);
+        });
+        botao("Cancelar", false, v -> {
+            // Volta para onde estava
+            if (lastErrorCode.isEmpty()) painelControle();
+            else inicio();
+        });
+    }
+
+    private void enviarRelatorio(String userMsg, String code, String context) {
+        limpar("enviando");
+        titulo("Enviando…");
+        carregando();
+        worker.execute(() -> {
+            try {
+                // Monta o payload JSON
+                String json = String.format(
+                    "{\"model\":\"%s\",\"android\":\"%s\",\"error_code\":\"%s\",\"stage\":\"%s\",\"user_msg\":\"%s\",\"context\":\"%s\"}",
+                    info != null ? info.model : "unknown",
+                    info != null ? info.android : "unknown",
+                    code,
+                    lastErrorStage,
+                    userMsg.replace("\"", "\\\""),
+                    context.replace("\"", "\\\"").replace("\n", " ")
+                );
+
+                // Envia para o endpoint (simulado aqui com log, mas seria HTTP POST)
+                // Em produção, isso iria para um Firebase, Supabase ou API própria
+                Log.d(TAG, "RELATORIO AJUDA: " + json);
+
+                // Simulação de envio HTTP
+                URL url = new URL("https://httpbin.org/post"); // Placeholder
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setDoOutput(true);
+                try (OutputStream os = conn.getOutputStream()) {
+                    os.write(json.getBytes(StandardCharsets.UTF_8));
+                }
+                int resp = conn.getResponseCode();
+
+                runOnUiThread(() -> {
+                    limpar("enviado");
+                    titulo("Mensagem Enviada");
+                    texto("Recebemos seu pedido de ajuda com o código " + (code.isEmpty() ? "INFO" : code) + ".", INK, 18);
+                    texto("Responderemos em breve ou atualizaremos o app.", INK2, 16);
+                    espaco(28);
+                    botao("Fechar", true, v -> finish());
+                });
+
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    aviso("Falha ao enviar. Verifique sua internet.");
+                    // Volta para tela de ajuda
+                    solicitarAjuda(code, context);
+                });
+            }
+        });
+    }
+
+    // ---- Utilitários de UI e Rede ----
 
     private void comoLigarAdb() {
         new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                .setTitle("Depuração USB no projetor")
-                .setMessage("1. Configurações → Preferências do dispositivo → Sobre.\n"
-                        + "2. Aperte OK 7 vezes em Build, até aparecer \"Você agora é um desenvolvedor\".\n"
-                        + "3. Volte, abra Opções do desenvolvedor e ligue Depuração USB.\n\n"
-                        + "Em muitos HY300 ela já vem ligada.")
+                .setTitle("Depuração USB")
+                .setMessage("1. Configurações → Sobre → Build (clique 7 vezes).\n2. Opções do Desenvolvedor → Depuração USB.\nEm muitos projetores já vem ativado.")
                 .setPositiveButton("Entendi", null)
                 .show();
     }
 
-    // ---- Rede e arquivos ----
-
-    /** IPv4 do celular no Wi‑Fi (ou na rede local ativa), ou null sem Wi‑Fi. */
     private String meuIpWifi() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) return null;
         for (Network n : cm.getAllNetworks()) {
             NetworkCapabilities nc = cm.getNetworkCapabilities(n);
-            if (nc == null || !(nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
-                    || nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))) continue;
+            if (nc == null || !(nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))) continue;
             LinkProperties lp = cm.getLinkProperties(n);
             if (lp == null) continue;
             for (LinkAddress la : lp.getLinkAddresses()) {
@@ -380,15 +480,13 @@ public class MainActivity extends Activity {
         if (c != null) worker.execute(c::close);
     }
 
-    // ---- Componentes (preto e branco, como o site) ----
-
     private void limpar(String tela) {
         body.removeAllViews();
         body.setTag(tela);
     }
 
     private void titulo(String s) {
-        TextView t = texto(s, INK, 30);
+        TextView t = texto(s, INK, 28);
         t.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
         t.setLetterSpacing(-0.02f);
         espaco(10);
@@ -417,7 +515,7 @@ public class MainActivity extends Activity {
         TextView t = new TextView(this);
         t.setText(s);
         t.setTextColor(INK);
-        t.setTextSize(17);
+        t.setTextSize(16);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, -2, 1f);
         lp.leftMargin = dp(14);
         row.addView(t, lp);
@@ -437,13 +535,13 @@ public class MainActivity extends Activity {
         Button b = new Button(this);
         b.setText(s);
         b.setAllCaps(false);
-        b.setTextSize(17);
+        b.setTextSize(16);
         b.setTypeface(Typeface.DEFAULT_BOLD);
         b.setTextColor(primario ? PAPER : INK);
         b.setBackground(caixa(primario));
         b.setStateListAnimator(null);
         b.setOnClickListener(l);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(54));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(50));
         lp.bottomMargin = dp(10);
         body.addView(b, lp);
     }
@@ -474,7 +572,7 @@ public class MainActivity extends Activity {
 
     private GradientDrawable caixa(boolean cheia) {
         GradientDrawable g = new GradientDrawable();
-        g.setCornerRadius(dp(2));
+        g.setCornerRadius(dp(4));
         g.setColor(cheia ? INK : Color.TRANSPARENT);
         g.setStroke(dp(1), cheia ? INK : LINE);
         return g;

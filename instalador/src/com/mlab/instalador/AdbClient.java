@@ -42,14 +42,21 @@ final class AdbClient implements Closeable {
     private final Socket socket;
     private final InputStream in;
     private final OutputStream out;
+    private final String host;
     private int maxPayload = 4096;
     private int nextLocalId = 1;
     String banner = "";
 
-    private AdbClient(Socket s) throws IOException {
-        socket = s;
+    private AdbClient(Socket s, String host) throws IOException {
+        this.socket = s;
+        this.host = host;
         in = new BufferedInputStream(s.getInputStream());
         out = new BufferedOutputStream(s.getOutputStream());
+    }
+
+    /** Retorna o IP do projetor conectado (usado para abrir o controle remoto no navegador). */
+    String getHost() {
+        return host;
     }
 
     /**
@@ -62,7 +69,7 @@ final class AdbClient implements Closeable {
         s.connect(new InetSocketAddress(host, PORT), 4000);
         s.setTcpNoDelay(true);
         s.setSoTimeout(10_000);
-        AdbClient c = new AdbClient(s);
+        AdbClient c = new AdbClient(s, host);
         try {
             c.handshake(key, listener, authWaitMs);
             return c;
