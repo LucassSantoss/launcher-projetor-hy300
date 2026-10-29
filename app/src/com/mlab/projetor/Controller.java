@@ -216,24 +216,15 @@ final class Controller {
      * "teclado" ou "teclado + direcional" (testado no HY300: so SOURCE_DPAD move a selecao).
      */
     private void sendRemoteKey(int code) {
-        // Prioridade 1: Accessibility Service (resolve HOME/VOLTAR e tenta setas via gestos em apps de terceiros)
-        if (KeyService.instance != null && KeyService.instance.injectKey(code)) {
-            return;
-        }
-        // Prioridade 2: Instrumentation (fallback para o próprio app ou se o serviço não estiver ativo)
-        try {
-            int dev = remoteDevice();
-            boolean dpad = code == KeyEvent.KEYCODE_DPAD_UP || code == KeyEvent.KEYCODE_DPAD_DOWN
-                    || code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT
-                    || code == KeyEvent.KEYCODE_DPAD_CENTER;
-            int src = dpad ? InputDevice.SOURCE_DPAD : InputDevice.SOURCE_KEYBOARD;
-            long down = SystemClock.uptimeMillis();
-            inst.sendKeySync(new KeyEvent(down, down, KeyEvent.ACTION_DOWN, code, 0, 0, dev, 0, KeyEvent.FLAG_FROM_SYSTEM, src));
-            inst.sendKeySync(new KeyEvent(down, SystemClock.uptimeMillis(), KeyEvent.ACTION_UP, code, 0, 0, dev, 0,
-                    KeyEvent.FLAG_FROM_SYSTEM, src));
-        } catch (SecurityException e) {
-            Log.w(TAG, "Falha ao injetar tecla via Instrumentation. Ative o Serviço de Acessibilidade nas configurações.");
-        }
+        int dev = remoteDevice();
+        boolean dpad = code == KeyEvent.KEYCODE_DPAD_UP || code == KeyEvent.KEYCODE_DPAD_DOWN
+                || code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT
+                || code == KeyEvent.KEYCODE_DPAD_CENTER;
+        int src = dpad ? InputDevice.SOURCE_DPAD : InputDevice.SOURCE_KEYBOARD;
+        long down = SystemClock.uptimeMillis();
+        inst.sendKeySync(new KeyEvent(down, down, KeyEvent.ACTION_DOWN, code, 0, 0, dev, 0, KeyEvent.FLAG_FROM_SYSTEM, src));
+        inst.sendKeySync(new KeyEvent(down, SystemClock.uptimeMillis(), KeyEvent.ACTION_UP, code, 0, 0, dev, 0,
+                KeyEvent.FLAG_FROM_SYSTEM, src));
     }
 
     // Volume vindo do celular: sem a barra do sistema (FLAG_SHOW_UI); quem mostra e o nosso aviso.
