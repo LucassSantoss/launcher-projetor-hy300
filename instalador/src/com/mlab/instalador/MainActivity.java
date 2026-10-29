@@ -79,18 +79,51 @@ public class MainActivity extends Activity {
 
     // ---- Telas ----
 
+    private String modeloSelecionado = null;
+
     private void inicio() {
         limpar("inicio");
-        titulo("Instalar o Projetor");
-        texto("Tela nova e controle pelo celular para o seu projetor HY300 ou parecido.", INK2, 17);
-        espaco(28);
-        passo("1", "Celular e projetor no mesmo Wi‑Fi.");
-        passo("2", "No projetor, ligue a Depuração USB.");
+        titulo("Selecione seu aparelho");
+        texto("Escolha o modelo do seu projetor ou TV Box para garantir a compatibilidade.", INK2, 17);
+        espaco(24);
+
+        // Lista de modelos suportados
+        String[] modelosSuportados = {
+            "HY300 / HY300 Pro",
+            "TX6 / TX6 Mini",
+            "X96 Max / X96 Max+",
+            "H96 Max / H96 Pro",
+            "Tanix TX3 / TX5",
+            "Outro projetor Android (Allwinner/Rockchip)"
+        };
+
+        for (final String m : modelosSuportados) {
+            botao(m, false, v -> {
+                modeloSelecionado = m;
+                telaConexao();
+            });
+        }
+
+        espaco(16);
+        texto("Smart TVs (Samsung, LG, Sony, Roku, etc.)", INK3, 14);
+        espaco(8);
+        botao("Minha TV é uma Smart TV fechada", false, v -> funilIncompativel());
+
+        rodape("Versão do Instalador: 2.0 | MLAB Solution");
+    }
+
+    private void telaConexao() {
+        limpar("conexao");
+        titulo("Conectar ao " + modeloSelecionado);
+        texto("Modelo selecionado: " + modeloSelecionado, INK2, 16);
+        espaco(20);
+        passo("1", "Celular e aparelho no mesmo Wi‑Fi.");
+        passo("2", "No aparelho, ligue a Depuração USB (ADB).");
         link("Como ligar a Depuração USB", v -> comoLigarAdb());
-        espaco(28);
-        botao("Procurar projetor", true, v -> procurar());
-        espaco(32);
-        texto("Ou digite o IP do projetor", INK3, 14);
+        espaco(24);
+        botao("Procurar na rede", true, v -> procurar());
+        espaco(24);
+        texto("Ou digite o IP do aparelho", INK3, 14);
         espaco(8);
         final EditText ip = new EditText(this);
         ip.setHint("Ex.: 192.168.0.20");
@@ -104,15 +137,32 @@ public class MainActivity extends Activity {
         ip.setPadding(dp(14), dp(12), dp(14), dp(12));
         body.addView(ip, new LinearLayout.LayoutParams(-1, -2));
         espaco(10);
-        botao("Conectar", false, v -> {
+        botao("Conectar via IP", false, v -> {
             String s = ip.getText().toString().trim();
             if (!s.matches("\\d{1,3}(\\.\\d{1,3}){3}")) {
-                aviso("Digite um IP como 192.168.0.20. Ele aparece nos ajustes de rede do projetor.");
+                aviso("Digite um IP válido como 192.168.0.20.");
                 return;
             }
             conectar(s);
         });
-        rodape("Versão do Projetor incluída: 4.5.3");
+        espaco(16);
+        link("Voltar e escolher outro modelo", v -> inicio());
+    }
+
+    private void funilIncompativel() {
+        limpar("incompativel");
+        titulo("Aparelho não suportado via rede");
+        texto("Smart TVs com sistemas fechados (Tizen, WebOS, Android TV oficial de marcas como Sony/Samsung/LG) bloqueiam a instalação de apps de sistema via rede Wi-Fi.", INK2, 16);
+        espaco(20);
+        texto("Para esses aparelhos, a única forma segura de instalar a interface MLAB é através do nosso Pendrive Físico Otimizado, que já vem pronto para plugar e usar.", INK, 17);
+        espaco(28);
+
+        // Botão simulando ação de compra/redirect
+        botao("Comprar Pendrive Físico Otimizado", true, v -> {
+            aviso("Redirecionando para a loja MLAB... (Funcionalidade de checkout pendente)");
+        });
+        espaco(12);
+        botao("Voltar ao início", false, v -> inicio());
     }
 
     private void procurar() {

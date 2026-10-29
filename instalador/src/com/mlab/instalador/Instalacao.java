@@ -68,7 +68,10 @@ final class Instalacao {
             if (u.contains("SHARED_USER_INCOMPATIBLE")) s.resultado = Resultado.INCOMPATIVEL;
             else if (u.contains("UPDATE_INCOMPATIBLE")) s.resultado = Resultado.OUTRA_VERSAO;
             else if (u.contains("VERSION_DOWNGRADE")) s.resultado = Resultado.VERSAO_MAIS_NOVA;
-            else if (u.contains("INSUFFICIENT_STORAGE")) s.resultado = Resultado.SEM_ESPACO;
+            else if (u.contains("INSUFFICIENT_STORAGE") || u.contains("NOT_ENOUGH_SPACE")) {
+                s.resultado = Resultado.SEM_ESPACO;
+                s.detalhe = "O projetor está sem espaço interno suficiente para instalar o app. Apague alguns aplicativos ou arquivos no projetor (Ajustes → Armazenamento) e tente novamente.";
+            }
             else s.resultado = Resultado.ERRO;
             return s;
         }
