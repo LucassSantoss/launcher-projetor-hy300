@@ -170,6 +170,10 @@ final class WebServer {
     }
 
     private void route(Req r, Socket s, OutputStream out) throws IOException {
+        if ("OPTIONS".equals(r.method)) {
+            preflight(r, out);
+            return;
+        }
         String p = r.path;
         if (p.equals("/") || p.equals("/index.html")) {
             asset(out, "web/index.html", "text/html; charset=utf-8");
@@ -539,12 +543,31 @@ final class WebServer {
         send(out, code, "application/json; charset=utf-8", body.getBytes(StandardCharsets.UTF_8));
     }
 
+    /** Chromium consulta a permissao da rede local antes do fetch; nunca executa a acao no preflight. */
+    private static void preflight(Req r, OutputStream out) throws IOException {
+        String origin = r.h.get("origin");
+        String host = r.h.get("host");
+        if (origin == null || host == null || !origin.equals("http://" + host)) {
+            send(out, 403, "text/plain", new byte[0]);
+            return;
+        }
+        out.write(("HTTP/1.1 204 No Content\r\n"
+                + "Access-Control-Allow-Origin: " + origin + "\r\n"
+                + "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+                + "Access-Control-Allow-Headers: Content-Type, X-Pin\r\n"
+                + "Access-Control-Allow-Private-Network: true\r\n"
+                + "Access-Control-Max-Age: 600\r\n"
+                + "Vary: Origin\r\nCache-Control: no-store\r\nContent-Length: 0\r\n"
+                + "Connection: close\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+    }
+
     private static void send(OutputStream out, int code, String type, byte[] body) throws IOException {
         String status;
         switch (code) {
             case 200: status = "OK"; break;
             case 400: status = "Bad Request"; break;
             case 401: status = "Unauthorized"; break;
+            case 403: status = "Forbidden"; break;
             case 404: status = "Not Found"; break;
             case 405: status = "Method Not Allowed"; break;
             case 503: status = "Service Unavailable"; break;

@@ -192,9 +192,17 @@ public class HomeActivity extends Activity {
             lp.topMargin = Ui.dp(i == 0 ? 18 : 8);
             txt.addView(Ui.text(this, steps[i], 17, Ui.w500, Ui.TEXT), lp);
         }
+        TextView chromeHint = Ui.text(this,
+                "Chrome: se aparecer ERR_TOO_MANY_RETRIES, permita Rede local ou Dispositivos próximos em\n"
+                        + "Configurações do Android › Apps › Chrome › Permissões.",
+                13, Ui.w500, Ui.MUTED);
+        chromeHint.setMaxWidth(Ui.dp(680));
+        LinearLayout.LayoutParams hlp = new LinearLayout.LayoutParams(-2, -2);
+        hlp.topMargin = Ui.dp(16);
+        txt.addView(chromeHint, hlp);
         qrAddress = Ui.text(this, "", 14, Ui.w500, Ui.MUTED);
         LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(-2, -2);
-        alp.topMargin = Ui.dp(20);
+        alp.topMargin = Ui.dp(14);
         txt.addView(qrAddress, alp);
         LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(-2, -2);
         clp.topMargin = Ui.dp(6);
@@ -251,6 +259,13 @@ public class HomeActivity extends Activity {
         LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(-2, -2);
         blp.leftMargin = Ui.dp(10);
         bar.addView(brand, blp);
+        String installedVersion = installedVersion();
+        if (!installedVersion.isEmpty()) {
+            TextView version = Ui.text(this, "v" + installedVersion, 12, Ui.w500, Ui.MUTED);
+            LinearLayout.LayoutParams vlp = new LinearLayout.LayoutParams(-2, -2);
+            vlp.leftMargin = Ui.dp(8);
+            bar.addView(version, vlp);
+        }
         bar.addView(Ui.space(this, 1));
         info = Ui.text(this, "", 13, Ui.w500, Ui.MUTED);
         bar.addView(info);
@@ -259,6 +274,15 @@ public class HomeActivity extends Activity {
         wlp.leftMargin = Ui.dp(16);
         bar.addView(wifi, wlp);
         return bar;
+    }
+
+    private String installedVersion() {
+        try {
+            String name = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            return name == null ? "" : name;
+        } catch (android.content.pm.PackageManager.NameNotFoundException e) {
+            return "";
+        }
     }
 
     // ---- Coluna do relogio (estilo tela de bloqueio do iPhone) ----

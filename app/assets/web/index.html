@@ -339,7 +339,7 @@ input[type=file]{display:none}
     try { history.replaceState(null, '', location.pathname); } catch (e) {}
   }
   try { if (localStorage.getItem('tema') === 'claro') document.documentElement.classList.add('light'); } catch (e) {}
-  var ws = null, started = false, stateTimer = 0;
+  var ws = null, started = false, stateTimer = 0, wsFailures = 0;
 
   function toast(msg) {
     var t = $('#toast'); t.textContent = msg; t.classList.add('on');
@@ -352,23 +352,28 @@ input[type=file]{display:none}
       .catch(function () { return { ok: false }; });
   }
   function setStatus(on) { $('#dot').classList.toggle('on', on); $('#dot').setAttribute('aria-label', on ? 'Conectado' : 'Desconectado'); }
-  function connect() {
+  function connect(onReady, onRejected) {
     if (!T) return;
-    try { ws = new WebSocket('ws://' + location.host + '/ws?t=' + encodeURIComponent(T)); }
-    catch (e) { setTimeout(connect, 2000); return; }
-    ws.onopen = function () { setStatus(true); };
-    // O projetor avisa quando muda de app ou de item focado.
-    ws.onmessage = function (ev) { try { applyScreen(JSON.parse(ev.data)); } catch (e) {} };
-    ws.onclose = function () {
-      setStatus(false);
-      // So reconecta se o PIN ainda vale; senao pede o PIN de novo (nao insiste com PIN velho).
-      api('ping').then(function (r) {
-        if (r.auth) setTimeout(connect, 1500);
-        else if (r.ok) forgetAndAsk();
-        else setTimeout(connect, 3000);
-      });
+    var socket, opened = false;
+    try { socket = new WebSocket('ws://' + location.host + '/ws?t=' + encodeURIComponent(T)); }
+    catch (e) { if (onRejected) onRejected(); else setTimeout(connect, 2000); return; }
+    ws = socket;
+    socket.onopen = function () {
+      opened = true; wsFailures = 0; setStatus(true);
+      if (onReady) onReady();
     };
-    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+    // O projetor avisa quando muda de app ou de item focado.
+    socket.onmessage = function (ev) { try { applyScreen(JSON.parse(ev.data)); } catch (e) {} };
+    socket.onclose = function () {
+      if (ws === socket) ws = null;
+      setStatus(false);
+      if (!opened && onRejected) { onRejected(); return; }
+      if (!started) return;
+      // Uma queda comum reconecta. Tres handshakes recusados indicam PIN antigo/invalido.
+      if (!opened && ++wsFailures >= 3) { forgetAndAsk(); return; }
+      setTimeout(connect, opened ? 1500 : 3000);
+    };
+    socket.onerror = function () { try { socket.close(); } catch (e) {} };
   }
   function send(msg, fallback) {
     if (ws && ws.readyState === 1) ws.send(msg);
@@ -703,21 +708,23 @@ input[type=file]{display:none}
   function start() {
     if (started) return; started = true;
     $('#pin').classList.remove('show');
-    fillSettings(); connect(); loadApps(); refreshState();
+    fillSettings();
+    if (!ws || ws.readyState !== WebSocket.OPEN) connect();
+    loadApps(); refreshState();
     stateTimer = setInterval(function () { if (!document.hidden) refreshState(); }, 5000);
   }
   function askPin() { $('#pinin').value = ''; $('#pin').classList.add('show'); setTimeout(function () { $('#pinin').focus(); }, 50); }
   $('#pform').addEventListener('submit', function (e) {
     e.preventDefault();
     T = $('#pinin').value.trim();
-    api('ping').then(function (r) {
-      if (r.auth) {
-        try {
-          if ($('#remember').checked) localStorage.setItem('pin', T);
-          else { localStorage.removeItem('pin'); sessionStorage.setItem('pin', T); }
-        } catch (e) {}
-        start();
-      } else { toast(r.ok ? 'PIN incorreto' : 'Sem conexão'); $('#pinin').value = ''; }
+    connect(function () {
+      try {
+        if ($('#remember').checked) localStorage.setItem('pin', T);
+        else { localStorage.removeItem('pin'); sessionStorage.setItem('pin', T); }
+      } catch (e) {}
+      start();
+    }, function () {
+      toast('PIN incorreto ou conexão interrompida'); $('#pinin').value = '';
     });
   });
   // PIN de 6 digitos entra sozinho, sem apertar Entrar.
@@ -769,7 +776,7 @@ input[type=file]{display:none}
     });
   });
 
-  if (T) api('ping').then(function (r) { r.auth ? start() : (r.ok ? forgetAndAsk() : askPin()); }); else askPin();
+  if (T) connect(start, forgetAndAsk); else askPin();
   document.addEventListener('visibilitychange', function () { if (!document.hidden && started) refreshState(); });
 })();
 </script>
