@@ -296,21 +296,29 @@ public class MainActivity extends Activity {
                 byte[] apk = asset(apkName);
                 final Instalacao.Saida s = Instalacao.instalar(adb, info, apk);
 
-                // Fallback: Se falhar (Manifesto ou Incompatível) na versão Shared, tenta a Compat automaticamente
-                if ((s.resultado == Instalacao.Resultado.ERRO_MANIFESTO || s.resultado == Instalacao.Resultado.INCOMPATIVEL) && apkName.equals("Projetor-shared.apk")) {
-                    runOnUiThread(() -> texto("Controle total incompatível neste Android. Instalando versão compatível (controle limitado em apps como Netflix)...", INK2, 14));
-                    byte[] apkCompat = asset("Projetor-compat.apk");
-                    final Instalacao.Saida s2 = Instalacao.instalar(adb, info, apkCompat);
-                    if (s2.resultado == Instalacao.Resultado.OK) {
-                        s2.detalhe = "Instalado! Nota: O controle dentro de apps (Netflix/YouTube) pode ser limitado neste aparelho devido ao Android 12+.";
-                    }
-                    runOnUiThread(() -> resultado(s2));
-                } else {
-                    runOnUiThread(() -> resultado(s));
-                }
+                // Sem fallback automático: força o resultado da versão Shared (ou o erro real do Android)
+                runOnUiThread(() -> resultado(s));
             } catch (Exception e) {
                 final String msg = e.getMessage() == null ? e.toString() : e.getMessage();
                 runOnUiThread(() -> erro("A instalação parou", msg, "INSTALACAO_EXCECAO"));
+            }
+        });
+    }
+
+    private void instalarCompat() {
+        limpar("instalando");
+        titulo("Instalando versão compatível…");
+        texto("Esta versão tem controle limitado em apps como Netflix.", INK2, 14);
+        espaco(24);
+        carregando();
+        worker.execute(() -> {
+            try {
+                byte[] apk = asset("Projetor-compat.apk");
+                final Instalacao.Saida s = Instalacao.instalar(adb, info, apk);
+                runOnUiThread(() -> resultado(s));
+            } catch (Exception e) {
+                final String msg = e.getMessage() == null ? e.toString() : e.getMessage();
+                runOnUiThread(() -> erro("A instalação parou", msg, "INSTALACAO_COMPAT_EXCECAO"));
             }
         });
     }
@@ -326,6 +334,16 @@ public class MainActivity extends Activity {
                 botao("Fechar", false, v -> finish());
                 return;
             case INCOMPATIVEL:
+            case ERRO_MANIFESTO:
+            case ERRO:
+                limpar("erro");
+                titulo("A instalação falhou");
+                texto(s.detalhe.isEmpty() ? "O projetor recusou o arquivo." : s.detalhe, INK2, 14);
+                espaco(24);
+                // Botão específico para fallback manual conforme pedido do usuário
+                botao("Instalar versão compatível (controle limitado)", true, v -> instalarCompat());
+                botao("Voltar ao início", false, v -> inicio());
+                return;
                 erro("Incompatível", "O sistema recusou o app (Erro: " + s.codigoErro + ").", s.codigoErro);
                 return;
             case ANDROID_ANTIGO:
