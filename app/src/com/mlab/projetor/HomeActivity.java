@@ -152,6 +152,13 @@ public class HomeActivity extends Activity {
         mlp.topMargin = Ui.dp(24);
         root.addView(main, mlp);
 
+        TextView favoritesHint = Ui.text(this,
+                "Para remover um favorito, selecione o app e segure OK.", 13, Ui.w500, Ui.MUTED);
+        favoritesHint.setGravity(Gravity.END);
+        LinearLayout.LayoutParams hintLp = new LinearLayout.LayoutParams(-1, -2);
+        hintLp.topMargin = Ui.dp(12);
+        root.addView(favoritesHint, hintLp);
+
         LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(-2, Ui.dp(84));
         dlp.gravity = Gravity.CENTER_HORIZONTAL;
         dlp.topMargin = Ui.dp(22);

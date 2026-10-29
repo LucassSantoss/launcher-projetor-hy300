@@ -167,6 +167,8 @@ final class Prefs {
         if (l.remove(pkg)) {
             added = false;
         } else {
+            // Apps ausentes nao ocupam as oito vagas exibidas na home.
+            l.removeIf(p -> Apps.entry(c, p) == null);
             if (l.size() >= MAX_FAVS) l.remove(l.size() - 1);
             l.add(pkg);
             added = true;
