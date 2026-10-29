@@ -52,6 +52,37 @@ final class Prefs {
         sp(c).edit().putString("home_original", pkg).apply();
     }
 
+    /** Guarda uma vez os ajustes que o app altera, para a remocao poder restaura-los exatamente. */
+    static synchronized boolean saveSystemState(Context c, String services, int accessibility, int mouse) {
+        SharedPreferences p = sp(c);
+        if (p.getBoolean("sistema_original_salvo", false)) return true;
+        SharedPreferences.Editor e = p.edit()
+                .putBoolean("a11y_original_null", services == null)
+                .putInt("a11y_ativo_original", accessibility)
+                .putInt("mouse_original", mouse)
+                .putBoolean("sistema_original_salvo", true);
+        if (services == null) e.remove("a11y_original");
+        else e.putString("a11y_original", services);
+        return e.commit();
+    }
+
+    static boolean systemStateSaved(Context c) {
+        return sp(c).getBoolean("sistema_original_salvo", false);
+    }
+
+    static String originalAccessibilityServices(Context c) {
+        SharedPreferences p = sp(c);
+        return p.getBoolean("a11y_original_null", false) ? null : p.getString("a11y_original", "");
+    }
+
+    static int originalAccessibilityEnabled(Context c) {
+        return sp(c).getInt("a11y_ativo_original", 0);
+    }
+
+    static int originalMouseState(Context c) {
+        return sp(c).getInt("mouse_original", android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DEFAULT);
+    }
+
     /** O app ja se definiu como tela inicial uma vez (nao insiste depois). */
     static boolean homeClaimed(Context c) {
         return sp(c).getBoolean("home_definida", false);

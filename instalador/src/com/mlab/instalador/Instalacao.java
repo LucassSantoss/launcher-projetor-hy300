@@ -1,6 +1,8 @@
 package com.mlab.instalador;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Locale;
 
 /**
@@ -91,11 +93,24 @@ final class Instalacao {
         return l.length == 0 ? "" : l[l.length - 1].trim();
     }
 
-    /** Desliga o ADB: a conexao cai logo depois, entao nao espera resposta. */
-    static void desligarAdb(AdbClient adb) {
+    /** Desliga o ADB e confirma que a porta fechou enquanto o controle continua acessivel. */
+    static boolean desligarAdb(AdbClient adb) {
+        String host = adb.host();
         try {
             adb.shell("settings put global adb_enabled 0");
         } catch (IOException ignored) {
+        }
+        adb.close();
+        sleep(3000);
+        return !portaAberta(host, AdbClient.PORT) && portaAberta(host, 8080);
+    }
+
+    static boolean portaAberta(String host, int port) {
+        try (Socket s = new Socket()) {
+            s.connect(new InetSocketAddress(host, port), 2000);
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 

@@ -109,6 +109,10 @@ final class AdbClient implements Closeable {
         return exec("shell:" + cmd, null).trim();
     }
 
+    String host() {
+        return socket.getInetAddress().getHostAddress();
+    }
+
     /**
      * Abre um servico, manda {@code input} (se houver) e le tudo ate o projetor fechar.
      * Usado pelo "exec:cmd package install -S", que le o APK pela entrada padrao.

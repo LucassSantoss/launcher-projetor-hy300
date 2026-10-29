@@ -361,11 +361,6 @@ function Instalar {
     if ($r -match 'Success') { Ok 'Definido como tela inicial.' }
     else { Aviso ('Nao consegui definir como tela inicial: ' + $r); Info 'Aperte a tecla Inicio do controle e escolha "Projetor".' }
 
-    if (Tem-Mouse) {
-        Sh pm disable $MOUSE_SVC | Out-Null
-        Ok 'Modo mouse do fabricante desligado (o app tem o seu proprio).'
-    }
-
     Sh am start -a android.intent.action.MAIN -c android.intent.category.HOME | Out-Null
     $ip = ($script:DEV -split ':')[0]
     Titulo 'Pronto'
@@ -414,19 +409,17 @@ function Desinstalar {
         if ($r -match 'Success') { Ok 'App Projetor removido.' } else { Erro ('Falhou ao remover: ' + $r); Sair 1 }
     }
 
-    if (Tem-Mouse) {
-        Sh pm enable $MOUSE_SVC | Out-Null
-        $svc = if ($b.ContainsKey('a11y')) { $b['a11y'] } else { $MOUSE_SVC }
-        # Tira restos do app da lista de acessibilidade e garante o modo mouse do fabricante.
-        $lista = @(($svc -split ':') | Where-Object { $_ -and $_ -notlike "$PKG/*" })
-        if ($lista -notcontains $MOUSE_SVC) { $lista += $MOUSE_SVC }
-        Sh settings put secure enabled_accessibility_services ("'" + ($lista -join ':') + "'") | Out-Null
+    if (Tem-Mouse) { Sh pm default-state $MOUSE_SVC | Out-Null }
+    if ($b.ContainsKey('a11y')) {
+        if ($b['a11y']) { Sh settings put secure enabled_accessibility_services ("'" + $b['a11y'] + "'") | Out-Null }
+        else { Sh settings delete secure enabled_accessibility_services | Out-Null }
+        $a11yAtivo = if ($b.ContainsKey('a11y_ativo')) { $b['a11y_ativo'] } else { '1' }
+        Sh settings put secure accessibility_enabled $a11yAtivo | Out-Null
+        Ok 'Acessibilidade original restaurada.'
+    } elseif (Tem-Mouse) {
+        Sh settings put secure enabled_accessibility_services ("'" + $MOUSE_SVC + "'") | Out-Null
         Sh settings put secure accessibility_enabled 1 | Out-Null
         Ok 'Modo mouse do fabricante religado.'
-    } elseif ($b.ContainsKey('a11y')) {
-        $lista = @(($b['a11y'] -split ':') | Where-Object { $_ -and $_ -notlike "$PKG/*" })
-        if ($lista.Count -gt 0) { Sh settings put secure enabled_accessibility_services ("'" + ($lista -join ':') + "'") | Out-Null }
-        else { Sh settings delete secure enabled_accessibility_services | Out-Null }
     }
 
     Sh rm -f $BACKUP_DEV | Out-Null
