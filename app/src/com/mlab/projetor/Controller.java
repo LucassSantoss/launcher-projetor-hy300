@@ -216,12 +216,11 @@ final class Controller {
      * "teclado" ou "teclado + direcional" (testado no HY300: so SOURCE_DPAD move a selecao).
      */
     private void sendRemoteKey(int code) {
-        // Tenta usar o Accessibility Service primeiro (funciona em apps de terceiros sem root/sharedUserId)
+        // Prioridade 1: Accessibility Service (resolve HOME/VOLTAR e tenta setas via gestos em apps de terceiros)
         if (KeyService.instance != null && KeyService.instance.injectKey(code)) {
             return;
         }
-
-        // Fallback para Instrumentation (funciona no próprio app ou com permissões de sistema)
+        // Prioridade 2: Instrumentation (fallback para o próprio app ou se o serviço não estiver ativo)
         try {
             int dev = remoteDevice();
             boolean dpad = code == KeyEvent.KEYCODE_DPAD_UP || code == KeyEvent.KEYCODE_DPAD_DOWN
@@ -233,9 +232,7 @@ final class Controller {
             inst.sendKeySync(new KeyEvent(down, SystemClock.uptimeMillis(), KeyEvent.ACTION_UP, code, 0, 0, dev, 0,
                     KeyEvent.FLAG_FROM_SYSTEM, src));
         } catch (SecurityException e) {
-            // Se falhar por falta de permissão (INJECT_EVENTS), avisa o usuário uma vez
-            Log.w(TAG, "Falha ao injetar tecla (sem permissão de sistema). Controle limitado em apps de terceiros.");
-            // Opcional: Mostrar toast ou HUD avisando que o controle remoto precisa do serviço de acessibilidade ativado
+            Log.w(TAG, "Falha ao injetar tecla via Instrumentation. Ative o Serviço de Acessibilidade nas configurações.");
         }
     }
 

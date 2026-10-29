@@ -52,6 +52,37 @@ final class Prefs {
         sp(c).edit().putString("home_original", pkg).apply();
     }
 
+    /** Guarda uma vez os ajustes que o app altera, para a remocao poder restaura-los exatamente. */
+    static synchronized boolean saveSystemState(Context c, String services, int accessibility, int mouse) {
+        SharedPreferences p = sp(c);
+        if (p.getBoolean("sistema_original_salvo", false)) return true;
+        SharedPreferences.Editor e = p.edit()
+                .putBoolean("a11y_original_null", services == null)
+                .putInt("a11y_ativo_original", accessibility)
+                .putInt("mouse_original", mouse)
+                .putBoolean("sistema_original_salvo", true);
+        if (services == null) e.remove("a11y_original");
+        else e.putString("a11y_original", services);
+        return e.commit();
+    }
+
+    static boolean systemStateSaved(Context c) {
+        return sp(c).getBoolean("sistema_original_salvo", false);
+    }
+
+    static String originalAccessibilityServices(Context c) {
+        SharedPreferences p = sp(c);
+        return p.getBoolean("a11y_original_null", false) ? null : p.getString("a11y_original", "");
+    }
+
+    static int originalAccessibilityEnabled(Context c) {
+        return sp(c).getInt("a11y_ativo_original", 0);
+    }
+
+    static int originalMouseState(Context c) {
+        return sp(c).getInt("mouse_original", android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DEFAULT);
+    }
+
     /** O app ja se definiu como tela inicial uma vez (nao insiste depois). */
     static boolean homeClaimed(Context c) {
         return sp(c).getBoolean("home_definida", false);
@@ -76,6 +107,35 @@ final class Prefs {
 
     static void setDark(Context c, boolean dark) {
         sp(c).edit().putBoolean("dark", dark).apply();
+    }
+
+    static boolean showHardware(Context c) {
+        return sp(c).getBoolean("mostrar_hardware", true);
+    }
+
+    static void setShowHardware(Context c, boolean show) {
+        sp(c).edit().putBoolean("mostrar_hardware", show).apply();
+    }
+
+    static int downloadKbps(Context c) {
+        return sp(c).getInt("download_kbps", -1);
+    }
+
+    static long downloadAttemptAt(Context c) {
+        return sp(c).getLong("download_tentativa_em", 0);
+    }
+
+    static void setDownloadAttemptAt(Context c, long now) {
+        sp(c).edit().putLong("download_tentativa_em", now).apply();
+    }
+
+    static String downloadCheckedAt(Context c) {
+        return sp(c).getString("download_medido_em", "");
+    }
+
+    static void setDownloadResult(Context c, int kbps, String checkedAt) {
+        sp(c).edit().putInt("download_kbps", kbps)
+                .putString("download_medido_em", checkedAt).apply();
     }
 
     /** Usa o decodificador OMX no lugar do Codec2 (contorna o erro 5.0 da Netflix nos anuncios). */
@@ -136,6 +196,8 @@ final class Prefs {
         if (l.remove(pkg)) {
             added = false;
         } else {
+            // Apps ausentes nao ocupam as oito vagas exibidas na home.
+            l.removeIf(p -> Apps.entry(c, p) == null);
             if (l.size() >= MAX_FAVS) l.remove(l.size() - 1);
             l.add(pkg);
             added = true;

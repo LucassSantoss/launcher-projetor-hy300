@@ -74,8 +74,8 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        worker.shutdownNow();
         fechar();
+        worker.shutdownNow();
         super.onDestroy();
     }
 
@@ -289,9 +289,25 @@ public class MainActivity extends Activity {
         carregando();
         worker.execute(() -> {
             try {
-                byte[] apk = asset("Projetor.apk");
+                // Seleciona o APK correto baseado no modelo do aparelho (Shared vs Compat)
+                String apkName = Instalacao.escolherApk(info);
+                runOnUiThread(() -> texto("Usando versão: " + apkName, INK3, 12));
+
+                byte[] apk = asset(apkName);
                 final Instalacao.Saida s = Instalacao.instalar(adb, info, apk);
-                runOnUiThread(() -> resultado(s));
+
+                // Fallback: Se falhar (Manifesto ou Incompatível) na versão Shared, tenta a Compat automaticamente
+                if ((s.resultado == Instalacao.Resultado.ERRO_MANIFESTO || s.resultado == Instalacao.Resultado.INCOMPATIVEL) && apkName.equals("Projetor-shared.apk")) {
+                    runOnUiThread(() -> texto("Controle total incompatível neste Android. Instalando versão compatível (controle limitado em apps como Netflix)...", INK2, 14));
+                    byte[] apkCompat = asset("Projetor-compat.apk");
+                    final Instalacao.Saida s2 = Instalacao.instalar(adb, info, apkCompat);
+                    if (s2.resultado == Instalacao.Resultado.OK) {
+                        s2.detalhe = "Instalado! Nota: O controle dentro de apps (Netflix/YouTube) pode ser limitado neste aparelho devido ao Android 12+.";
+                    }
+                    runOnUiThread(() -> resultado(s2));
+                } else {
+                    runOnUiThread(() -> resultado(s));
+                }
             } catch (Exception e) {
                 final String msg = e.getMessage() == null ? e.toString() : e.getMessage();
                 runOnUiThread(() -> erro("A instalação parou", msg, "INSTALACAO_EXCECAO"));
@@ -332,7 +348,25 @@ public class MainActivity extends Activity {
         }
     }
 
-    // ---- Sistema de Erros e Ajuda ----
+// ---- Sistema de Erros e Ajuda ----
+
+    private void desligarAdb() {
+        final AdbClient c = adb;
+        adb = null;
+        worker.execute(() -> {
+            final boolean desligado = c != null && Instalacao.desligarAdb(c);
+            runOnUiThread(() -> {
+                limpar("fim");
+                titulo(desligado ? "Tudo certo" : "Confira o acesso ADB");
+                texto(desligado
+                        ? "Acesso ADB desligado. Para remover o app no futuro, use Ajustes → Voltar à tela original, no projetor."
+                        : "Não foi possível confirmar que o ADB desligou. Confira em Opções do desenvolvedor e use apenas uma rede Wi‑Fi de confiança.",
+                        INK2, 16);
+                espaco(28);
+                botao("Fechar", true, v -> finish());
+            });
+        });
+    }
 
     private void erro(String t, String detalhe, String code) {
         lastErrorCode = code;
@@ -477,7 +511,7 @@ public class MainActivity extends Activity {
     private void fechar() {
         AdbClient c = adb;
         adb = null;
-        if (c != null) worker.execute(c::close);
+        if (c != null) c.close();
     }
 
     private void limpar(String tela) {

@@ -468,7 +468,20 @@ code{font-family:var(--font-mono);font-size:.9em}
         <div class="tabs__panel" role="tabpanel" id="p-projetor" aria-labelledby="tab-projetor">
           <div class="method-head">
             <p class="muted">Com um pendrive e o controle do projetor</p>
-            <a href="downloads/MS-Projetor-v4.6.3.apk" class="btn btn--ghost" download>Baixar APK (v4.6.3)</a>
+            <div style="display:flex; flex-direction:column; gap:var(--s-3); align-items:flex-start;">
+              <label for="model-select" style="font-size:var(--step--1); color:var(--ink-2); font-weight:600;">Qual é o seu projetor?</label>
+              <div style="display:flex; gap:var(--s-2); flex-wrap:wrap; align-items:center;">
+                <select id="model-select" style="padding:.6rem 1rem; border:1px solid var(--line-2); border-radius:var(--radius); background:var(--paper); color:var(--ink); font-family:inherit; font-size:var(--step--1); min-width:180px;">
+                  <option value="">Selecione o modelo...</option>
+                  <option value="hy300">HY300 / HY300 Mini</option>
+                  <option value="hy320">HY320 / HY320 Mini</option>
+                  <option value="tx6">TX6 / X96 / H96</option>
+                  <option value="outro">Outro Android 9+</option>
+                </select>
+                <a id="download-btn" href="#" class="btn btn--ghost" style="opacity:0.5; pointer-events:none;" onclick="return false;">Baixar APK</a>
+              </div>
+              <p id="download-hint" class="subtle" style="font-size:var(--step--2); margin:0; min-height:1.2em;"></p>
+            </div>
           </div>
           <ol class="steps">
             <li class="step">
@@ -504,7 +517,7 @@ code{font-family:var(--font-mono);font-size:.9em}
         <div class="tabs__panel" role="tabpanel" id="p-celular" aria-labelledby="tab-celular">
           <div class="method-head">
             <p class="muted">Pelo celular, no mesmo Wi‑Fi do projetor</p>
-            <a href="downloads/MS-Instalador-v4.6.3.apk" class="btn btn--ghost" download>Baixar instalador (v4.6.3)</a>
+            <a href="downloads/MS-Instalador-SMART.apk" class="btn btn--ghost" download>Baixar instalador (v4.6.7 - Inteligente)</a>
           </div>
           <ol class="steps steps--phones">
             <li class="step"><div class="step__text"><h3>Abra e toque em Procurar</h3><p class="subtle">Antes, <a href="#adb" data-open-adb>ligue o ADB no projetor</a>. Se o Android pedir, permita instalar desta fonte</p></div><figure class="phone" aria-label="Ilustração da tela do instalador"><div class="phone__screen"><p class="ph-t">Instalar o Projetor</p><p class="ph-s">Tela nova e controle pelo celular</p><div class="ph-step"><span>1</span>Mesmo Wi‑Fi</div><div class="ph-step"><span>2</span>Depuração USB ligada</div><div class="ph-btn">Procurar projetor</div><p class="ph-s ph-s--sm">Ou digite o IP</p><div class="ph-input">192.168.0.20</div><div class="ph-btn ph-btn--ghost">Conectar</div></div></figure></li>
@@ -531,6 +544,44 @@ code{font-family:var(--font-mono);font-size:.9em}
           </ol>
           <p class="subtle" style="margin-top:var(--s-4)">Sem IA: <a href="downloads/projetor-kit-pc.zip" download>kit para Windows</a></p>
         </div>
+      </div>
+
+      <!-- Tabela de Compatibilidade -->
+      <div style="margin-top:var(--s-6); overflow-x:auto;">
+        <p class="eyebrow" data-reveal>COMPATIBILIDADE</p>
+        <h3 data-reveal style="margin-bottom:var(--s-3)">Qual versão usar?</h3>
+        <table style="width:100%; border-collapse:collapse; font-size:var(--step--1); min-width:500px;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--line-2); text-align:left;">
+              <th style="padding:var(--s-3); color:var(--ink-2);">Aparelho</th>
+              <th style="padding:var(--s-3); color:var(--ink-2);">Versão Recomendada</th>
+              <th style="padding:var(--s-3); color:var(--ink-2);">Controle Remoto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--line);">
+              <td style="padding:var(--s-3);"><b>HY300 / HY300 Mini</b></td>
+              <td style="padding:var(--s-3); color:var(--ink-2);">Shared (Controle Total)</td>
+              <td style="padding:var(--s-3); color:#4ade80;">Completo (Setas + Home)</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--line);">
+              <td style="padding:var(--s-3);"><b>HY320 / HY320 Mini</b></td>
+              <td style="padding:var(--s-3); color:var(--ink-2);">Compat (Instalação Segura)</td>
+              <td style="padding:var(--s-3); color:#fbbf24;">Limitado (Home/Voltar via Acessibilidade)</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--line);">
+              <td style="padding:var(--s-3);"><b>TX6 / X96 / H96</b></td>
+              <td style="padding:var(--s-3); color:var(--ink-2);">Compat (Instalação Segura)</td>
+              <td style="padding:var(--s-3); color:#fbbf24;">Limitado (Home/Voltar via Acessibilidade)</td>
+            </tr>
+            <tr>
+              <td style="padding:var(--s-3);"><b>Outros Android 9+</b></td>
+              <td style="padding:var(--s-3); color:var(--ink-2);">Shared (Tentar primeiro)</td>
+              <td style="padding:var(--s-3); color:var(--ink-3);">Depende do sistema</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="subtle" style="margin-top:var(--s-2); font-size:var(--step--2);">* O Instalador Inteligente detecta o modelo automaticamente e escolhe a versão correta.</p>
       </div>
 
       <div data-accordion style="margin-top:var(--s-6)" id="adb">
@@ -640,8 +691,8 @@ code{font-family:var(--font-mono);font-size:.9em}
       </nav>
       <div class="foot__col">
         <p class="badge">Downloads</p>
-        <a href="downloads/MS-Projetor-v4.6.3.apk" download>MS Projetor · v4.6.3</a>
-        <a href="downloads/MS-Instalador-v4.6.3.apk" download>Instalador Android · v4.6.3</a>
+        <a href="downloads/MS-Projetor-NUCLEAR-FIX.apk" download>MS Projetor · v4.6.7 (Compat)</a>
+        <a href="downloads/MS-Instalador-SMART.apk" download>Instalador Inteligente · v4.6.7</a>
         <a href="downloads/projetor-kit-pc.zip" download>Kit para Windows</a>
         <a href="https://github.com/krnsubmundoclan-web/projetor-hy300" target="_blank" rel="noopener">Código no GitHub ↗</a>
       </div>
@@ -986,6 +1037,43 @@ Não desinstale, desative nem apague nenhum outro app, arquivo ou configuração
       }
     });
   });
+
+  // Lógica do Seletor de Modelo para Download Direto
+  var modelSelect = document.getElementById('model-select');
+  var downloadBtn = document.getElementById('download-btn');
+  var downloadHint = document.getElementById('download-hint');
+
+  if (modelSelect && downloadBtn) {
+    modelSelect.addEventListener('change', function () {
+      var val = this.value;
+      if (!val) {
+        downloadBtn.style.opacity = '0.5';
+        downloadBtn.style.pointerEvents = 'none';
+        downloadBtn.href = '#';
+        downloadBtn.onclick = function() { return false; };
+        if (downloadHint) downloadHint.textContent = '';
+        return;
+      }
+
+      downloadBtn.style.opacity = '1';
+      downloadBtn.style.pointerEvents = 'auto';
+      downloadBtn.onclick = null; // Remove o bloqueio
+
+      // HY320, TX6, H96 -> Força Compat (Sem SharedID)
+      // HY300, Outro -> Tenta Shared (Com SharedID) primeiro, ou Compat se falhar (mas aqui direcionamos direto)
+      if (val === 'hy320' || val === 'tx6') {
+        downloadBtn.href = 'downloads/MS-Projetor-NUCLEAR-FIX.apk';
+        downloadBtn.textContent = 'Baixar APK (Compatível)';
+        if (downloadHint) downloadHint.textContent = 'Versão segura para Android 12+ restrito.';
+      } else {
+        // Para HY300 e outros, oferecemos a Shared (Controle Total)
+        // Nota: Se falhar, o usuário pode voltar e pegar a Compat.
+        downloadBtn.href = 'downloads/MS-Projetor-SHARED-TEST.apk';
+        downloadBtn.textContent = 'Baixar APK (Controle Total)';
+        if (downloadHint) downloadHint.textContent = 'Versão com controle completo (pode falhar em alguns Android 12+).';
+      }
+    });
+  }
 })();
 </script>
 </body>

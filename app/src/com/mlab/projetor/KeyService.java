@@ -28,21 +28,120 @@ public class KeyService extends AccessibilityService {
     }
 
     /**
-     * Injeta uma tecla globalmente usando o Accessibility Service (fallback para apps de terceiros).
-     * Funciona sem root/sharedUserId no Android 12+.
+     * Injeta uma tecla globalmente usando o Accessibility Service.
+     * HOME/VOLTAR/RECENTES: performGlobalAction (funciona 100% sem root).
+     * SETAS/OK: tenta navegar via AccessibilityNodeInfo ou dispatchGesture.
      */
     public boolean injectKey(int keyCode) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            // dispatchGesture é para toques; para teclas, usamos performAction ou dispatchKeyEvent se disponível.
-            // No Android 12+, AccessibilityService não tem dispatchKeyEvent direto público fácil sem root.
-            // A melhor alternativa sem root é usar 'input keyevent' via shell se tivermos permissão,
-            // ou simular gestos. Mas para D-PAD, o ideal é tentar Instrumentation primeiro.
-            // Se Instrumentation falhar, a única forma 100% garantida sem root é ADB shell input.
-            // Vamos tentar uma abordagem híbrida: se o serviço estiver ativo, tentamos focar e agir.
-            // Nota: Em muitos casos, sem INJECT_EVENTS, o controle de apps de terceiros é limitado.
-            // Vamos implementar um aviso ao usuário se o controle falhar fora do app.
-            return false; // Placeholder: Accessibility não injeta KEYEVENT facilmente sem root.
+        // Teclas globais que funcionam 100% via Accessibility sem root
+        switch (keyCode) {
+            case android.view.KeyEvent.KEYCODE_HOME:
+                return performGlobalAction(GLOBAL_ACTION_HOME);
+            case android.view.KeyEvent.KEYCODE_BACK:
+                return performGlobalAction(GLOBAL_ACTION_BACK);
+            case android.view.KeyEvent.KEYCODE_APP_SWITCH:
+                return performGlobalAction(GLOBAL_ACTION_RECENTS);
+            case android.view.KeyEvent.KEYCODE_POWER:
+                return performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN);
         }
+
+        // Para setas e OK: tenta usar dispatchGesture (API 24+) para simular swipe/toque
+        // ou navegação via AccessibilityNodeInfo
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            return injectDpadViaGesture(keyCode);
+        }
+        return false;
+    }
+
+    /**
+     * Simula D-Pad via gestos de swipe (funciona em muitos apps como Netflix/YouTube).
+     * Swipe curto na direção oposta = seta naquela direção.
+     */
+    private boolean injectDpadViaGesture(int keyCode) {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N) return false;
+
+        android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+        float cx = dm.widthPixels / 2f;
+        float cy = dm.heightPixels / 2f;
+        float dist = Math.min(dm.widthPixels, dm.heightPixels) * 0.15f; // 15% da tela
+
+        float startX, startY, endX, endY;
+        switch (keyCode) {
+            case android.view.KeyEvent.KEYCODE_DPAD_UP:
+                startX = cx; startY = cy + dist; endX = cx; endY = cy - dist;
+                break;
+            case android.view.KeyEvent.KEYCODE_DPAD_DOWN:
+                startX = cx; startY = cy - dist; endX = cx; endY = cy + dist;
+                break;
+            case android.view.KeyEvent.KEYCODE_DPAD_LEFT:
+                startX = cx + dist; startY = cy; endX = cx - dist; endY = cy;
+                break;
+            case android.view.KeyEvent.KEYCODE_DPAD_RIGHT:
+                startX = cx - dist; startY = cy; endX = cx + dist; endY = cy;
+                break;
+            case android.view.KeyEvent.KEYCODE_DPAD_CENTER:
+            case android.view.KeyEvent.KEYCODE_ENTER:
+                // Para OK/Enter: tenta clicar no nó focado
+                return clickFocusedNode();
+            default:
+                return false;
+        }
+
+        android.graphics.Path path = new android.graphics.Path();
+        path.moveTo(startX, startY);
+        path.lineTo(endX, endY);
+
+        android.accessibilityservice.GestureDescription.Builder builder =
+                new android.accessibilityservice.GestureDescription.Builder();
+        builder.addStroke(new android.accessibilityservice.GestureDescription.StrokeDescription(
+                path, 0, 100)); // 100ms de duração
+
+        final boolean[] result = {false};
+        final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
+
+        dispatchGesture(builder.build(), new android.accessibilityservice.AccessibilityService.GestureResultCallback() {
+            @Override
+            public void onCompleted(android.accessibilityservice.GestureDescription gestureDescription) {
+                result[0] = true;
+                latch.countDown();
+            }
+            @Override
+            public void onCancelled(android.accessibilityservice.GestureDescription gestureDescription) {
+                result[0] = false;
+                latch.countDown();
+            }
+        }, null);
+
+        try {
+            latch.await(200, java.util.concurrent.TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return result[0];
+    }
+
+    /**
+     * Clica no nó atualmente focado (para OK/Enter).
+     */
+    private boolean clickFocusedNode() {
+        AccessibilityNodeInfo root = getRootInActiveWindow();
+        if (root == null) return false;
+        AccessibilityNodeInfo focused = root.findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+        if (focused != null) {
+            boolean clicked = focused.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            focused.recycle();
+            root.recycle();
+            return clicked;
+        }
+        // Fallback: tenta foco de entrada
+        focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+        if (focused != null) {
+            boolean clicked = focused.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            focused.recycle();
+            root.recycle();
+            return clicked;
+        }
+        root.recycle();
         return false;
     }
 

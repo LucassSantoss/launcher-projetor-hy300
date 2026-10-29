@@ -73,5 +73,42 @@
       }
     });
   });
+
+  // Lógica do Seletor de Modelo para Download Direto
+  var modelSelect = document.getElementById('model-select');
+  var downloadBtn = document.getElementById('download-btn');
+  var downloadHint = document.getElementById('download-hint');
+
+  if (modelSelect && downloadBtn) {
+    modelSelect.addEventListener('change', function () {
+      var val = this.value;
+      if (!val) {
+        downloadBtn.style.opacity = '0.5';
+        downloadBtn.style.pointerEvents = 'none';
+        downloadBtn.href = '#';
+        downloadBtn.onclick = function() { return false; };
+        if (downloadHint) downloadHint.textContent = '';
+        return;
+      }
+
+      downloadBtn.style.opacity = '1';
+      downloadBtn.style.pointerEvents = 'auto';
+      downloadBtn.onclick = null; // Remove o bloqueio
+
+      // HY320, TX6, H96 -> Força Compat (Sem SharedID)
+      // HY300, Outro -> Tenta Shared (Com SharedID) primeiro, ou Compat se falhar (mas aqui direcionamos direto)
+      if (val === 'hy320' || val === 'tx6') {
+        downloadBtn.href = 'downloads/MS-Projetor-NUCLEAR-FIX.apk';
+        downloadBtn.textContent = 'Baixar APK (Compatível)';
+        if (downloadHint) downloadHint.textContent = 'Versão segura para Android 12+ restrito.';
+      } else {
+        // Para HY300 e outros, oferecemos a Shared (Controle Total)
+        // Nota: Se falhar, o usuário pode voltar e pegar a Compat.
+        downloadBtn.href = 'downloads/MS-Projetor-SHARED-TEST.apk';
+        downloadBtn.textContent = 'Baixar APK (Controle Total)';
+        if (downloadHint) downloadHint.textContent = 'Versão com controle completo (pode falhar em alguns Android 12+).';
+      }
+    });
+  }
 })();
 </script>

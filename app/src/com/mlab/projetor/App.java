@@ -14,6 +14,57 @@ public class App extends Application {
     static App inst;
     Controller controller;
     WebServer server;
+    boolean testingInternet;
+    private Thread internetWorker;
+    private boolean internetCancelled;
+
+    /** Chamado na thread principal; o teste continua se a Home for recriada ou perder o foco. */
+    void testInternet(boolean manual) {
+        long now = System.currentTimeMillis();
+        long previousAttempt = Prefs.downloadAttemptAt(this);
+        if (!InternetSpeed.shouldTest(Prefs.showHardware(this), testingInternet, manual, previousAttempt, now)) return;
+        testingInternet = true;
+        internetCancelled = false;
+        Prefs.setDownloadAttemptAt(this, now);
+        HomeActivity.refreshInternet(null);
+        internetWorker = new Thread(() -> {
+            int kbps = -1;
+            try {
+                kbps = InternetSpeed.measureKbps();
+            } catch (java.io.IOException | SecurityException e) {
+                if (!Thread.currentThread().isInterrupted()) Log.w("Projetor", "Teste de internet indisponível", e);
+            }
+            final int measured = kbps;
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                testingInternet = false;
+                internetWorker = null;
+                if (internetCancelled) {
+                    Prefs.setDownloadAttemptAt(this, previousAttempt);
+                    HomeActivity.refreshInternet(null);
+                    if (Prefs.showHardware(this)) testInternet(false);
+                    return;
+                }
+                String message = "Não foi possível medir a velocidade. Verifique a conexão e tente novamente. "
+                        + "O resultado anterior foi mantido.";
+                if (measured >= 0) {
+                    String checkedAt = new java.text.SimpleDateFormat("dd/MM HH:mm", java.util.Locale.ROOT)
+                            .format(new java.util.Date());
+                    Prefs.setDownloadResult(this, measured, checkedAt);
+                    message = "Download estimado: " + UsageRing.speedText(measured) + " Mbps.\nMedido em "
+                            + checkedAt + ".\nO gráfico fica completo a partir de 15 Mbps, conforme a recomendação da Netflix para 4K. "
+                            + "Para 1080p (Full HD), a Netflix recomenda 5 Mbps ou mais.";
+                }
+                HomeActivity.refreshInternet(manual ? message : null);
+            });
+        }, "internet-speed");
+        internetWorker.start();
+    }
+
+    void cancelInternetTest() {
+        if (internetWorker == null) return;
+        internetCancelled = true;
+        internetWorker.interrupt();
+    }
 
     @Override
     public void onCreate() {
@@ -55,6 +106,7 @@ public class App extends Application {
      * - liga o KeyService, que mostra o volume do controle fisico no aviso do app.
      */
     private void takeOverSystemUi() {
+        if (!saveSystemState()) return;
         try {
             getPackageManager().setComponentEnabledSetting(
                     new ComponentName("com.sxk.testdsndpi", "com.sxk.testdsndpi.MyService"),
@@ -83,6 +135,22 @@ public class App extends Application {
         } catch (Exception e) {
             Log.w("Projetor", "nao foi possivel ligar o KeyService", e);
         }
+    }
+
+    /** Versoes antigas ja alteraram estes ajustes e nao conseguem mais descobrir o estado anterior. */
+    private boolean saveSystemState() {
+        if (Prefs.systemStateSaved(this) || Prefs.homeClaimed(this)) return true;
+        try {
+            ContentResolver cr = getContentResolver();
+            String services = Settings.Secure.getString(cr, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+            int accessibility = Settings.Secure.getInt(cr, Settings.Secure.ACCESSIBILITY_ENABLED, 0);
+            int mouse = getPackageManager().getComponentEnabledSetting(Sistema.MOUSE_SVC);
+            if (Prefs.saveSystemState(this, services, accessibility, mouse)) return true;
+        } catch (Exception e) {
+            Log.w("Projetor", "nao foi possivel guardar os ajustes originais", e);
+        }
+        Log.e("Projetor", "ajustes originais nao foram guardados; sistema nao sera alterado");
+        return false;
     }
 
     /**

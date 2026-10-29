@@ -6,9 +6,12 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.StatFs;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -24,13 +27,22 @@ import java.util.List;
 
 /**
  * Tela inicial inspirada no iPhone/macOS: relogio grande da tela de bloqueio, favoritos
- * como cartoes de cor (paleta) e um Dock translucido com os ajustes do projetor.
+ * como artes horizontais dos apps e um Dock translucido com os ajustes do projetor.
  */
 public class HomeActivity extends Activity {
     private static final int COLS = 4;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private TextView selKind, selName, info, memory;
+    private TextView selKind, selName, info;
+    private UsageRing temperatureUsage, cpuUsage, ramUsage, storageUsage, internetUsage;
+    private View hardwarePanel;
+    private final HardwareUsage hardware = new HardwareUsage();
+    private final Runnable hardwareTick = new Runnable() {
+        @Override public void run() {
+            updateHardware();
+            handler.postDelayed(this, 3_000);
+        }
+    };
     /** Painel com o QR do controle: aparece so pelo botao "Celular" do Dock. */
     private View qrPanel;
     private ImageView qrImage;
@@ -115,12 +127,16 @@ public class HomeActivity extends Activity {
         loadFavorites();
         loadRecents();
         handler.post(tick);
+        applyHardwareVisibility();
+        refreshInternet(null);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         handler.removeCallbacks(tick);
+        handler.removeCallbacks(hardwareTick);
+        hardware.resetCpu();
         if (qrPanel != null) showQr(false);
     }
 
@@ -145,12 +161,25 @@ public class HomeActivity extends Activity {
         main.addView(clockColumn(), new LinearLayout.LayoutParams(Ui.dp(330), -1));
         grid = Ui.col(this);
         grid.setClipChildren(false);
+        grid.setClipToPadding(false);
+        grid.setGravity(Gravity.CENTER_VERTICAL);
+        grid.setPadding(Ui.dp(8), Ui.dp(8), Ui.dp(8), Ui.dp(8));
+        grid.addOnLayoutChangeListener((v, l, t, r, b, oldL, oldT, oldR, oldB) -> {
+            if (r - l != oldR - oldL) sizeFavoriteRows();
+        });
         LinearLayout.LayoutParams glp = new LinearLayout.LayoutParams(0, -1, 1f);
         glp.leftMargin = Ui.dp(36);
         main.addView(grid, glp);
         LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(-1, 0, 1f);
         mlp.topMargin = Ui.dp(24);
         root.addView(main, mlp);
+
+        TextView favoritesHint = Ui.text(this,
+                "Para remover um favorito, selecione o app e segure OK.", 13, Ui.w500, Ui.MUTED);
+        favoritesHint.setGravity(Gravity.END);
+        LinearLayout.LayoutParams hintLp = new LinearLayout.LayoutParams(-1, -2);
+        hintLp.topMargin = Ui.dp(12);
+        root.addView(favoritesHint, hintLp);
 
         LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(-2, Ui.dp(84));
         dlp.gravity = Gravity.CENTER_HORIZONTAL;
@@ -192,9 +221,17 @@ public class HomeActivity extends Activity {
             lp.topMargin = Ui.dp(i == 0 ? 18 : 8);
             txt.addView(Ui.text(this, steps[i], 17, Ui.w500, Ui.TEXT), lp);
         }
+        TextView chromeHint = Ui.text(this,
+                "Chrome: se aparecer ERR_TOO_MANY_RETRIES, permita Rede local ou Dispositivos próximos em\n"
+                        + "Configurações do Android › Apps › Chrome › Permissões.",
+                13, Ui.w500, Ui.MUTED);
+        chromeHint.setMaxWidth(Ui.dp(680));
+        LinearLayout.LayoutParams hlp = new LinearLayout.LayoutParams(-2, -2);
+        hlp.topMargin = Ui.dp(16);
+        txt.addView(chromeHint, hlp);
         qrAddress = Ui.text(this, "", 14, Ui.w500, Ui.MUTED);
         LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(-2, -2);
-        alp.topMargin = Ui.dp(20);
+        alp.topMargin = Ui.dp(14);
         txt.addView(qrAddress, alp);
         LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(-2, -2);
         clp.topMargin = Ui.dp(6);
@@ -251,6 +288,13 @@ public class HomeActivity extends Activity {
         LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(-2, -2);
         blp.leftMargin = Ui.dp(10);
         bar.addView(brand, blp);
+        String installedVersion = installedVersion();
+        if (!installedVersion.isEmpty()) {
+            TextView version = Ui.text(this, "v" + installedVersion, 12, Ui.w500, Ui.MUTED);
+            LinearLayout.LayoutParams vlp = new LinearLayout.LayoutParams(-2, -2);
+            vlp.leftMargin = Ui.dp(8);
+            bar.addView(version, vlp);
+        }
         bar.addView(Ui.space(this, 1));
         info = Ui.text(this, "", 13, Ui.w500, Ui.MUTED);
         bar.addView(info);
@@ -259,6 +303,15 @@ public class HomeActivity extends Activity {
         wlp.leftMargin = Ui.dp(16);
         bar.addView(wifi, wlp);
         return bar;
+    }
+
+    private String installedVersion() {
+        try {
+            String name = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            return name == null ? "" : name;
+        } catch (android.content.pm.PackageManager.NameNotFoundException e) {
+            return "";
+        }
     }
 
     // ---- Coluna do relogio (estilo tela de bloqueio do iPhone) ----
@@ -291,7 +344,7 @@ public class HomeActivity extends Activity {
 
         recents = Ui.col(this);
         LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, -2);
-        rlp.topMargin = Ui.dp(22);
+        rlp.topMargin = Ui.dp(8);
         rlp.leftMargin = Ui.dp(4);
         c.addView(recents, rlp);
 
@@ -305,10 +358,22 @@ public class HomeActivity extends Activity {
         LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(-1, -2);
         nlp.topMargin = Ui.dp(6);
         c.addView(selName, nlp);
-        memory = Ui.text(this, "", 13, Ui.w500, Ui.MUTED);
-        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(-2, -2);
-        mlp.topMargin = Ui.dp(10);
-        c.addView(memory, mlp);
+        LinearLayout meters = Ui.row(this);
+        temperatureUsage = new UsageRing(this, "Temp.");
+        temperatureUsage.setTemperature(-1);
+        cpuUsage = new UsageRing(this, "CPU");
+        ramUsage = new UsageRing(this, "RAM");
+        storageUsage = new UsageRing(this, "Espaço");
+        internetUsage = new UsageRing(this, "Internet");
+        internetUsage.setSpeed(Prefs.downloadKbps(this), Prefs.downloadCheckedAt(this));
+        for (UsageRing ring : new UsageRing[]{temperatureUsage, cpuUsage, ramUsage, storageUsage, internetUsage}) {
+            meters.addView(ring, new LinearLayout.LayoutParams(0, Ui.dp(66), 1f));
+        }
+        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(-1, -2);
+        mlp.topMargin = Ui.dp(30);
+        c.addView(meters, mlp);
+        hardwarePanel = meters;
+        hardwarePanel.setVisibility(Prefs.showHardware(this) ? View.VISIBLE : View.GONE);
         return c;
     }
 
@@ -353,7 +418,7 @@ public class HomeActivity extends Activity {
         }
     }
 
-    // ---- Favoritos: cartoes de cor, 4 colunas x 2 linhas ----
+    // ---- Favoritos: artes horizontais, 4 colunas x 2 linhas ----
 
     private void loadFavorites() {
         grid.removeAllViews();
@@ -367,7 +432,7 @@ public class HomeActivity extends Activity {
                 int i = r * COLS + col;
                 View v;
                 if (i < favs.size()) {
-                    v = tile(favs.get(i), i);
+                    v = tile(favs.get(i));
                     if (first == null) first = v;
                 } else if (!addShown) {
                     v = addTile();
@@ -384,10 +449,11 @@ public class HomeActivity extends Activity {
                     v.setNextFocusDownId(target.getId());
                 }
             }
-            LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, 0, 1f);
-            if (r > 0) rlp.topMargin = Ui.dp(16);
+            LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, Ui.dp(60));
+            if (r > 0) rlp.topMargin = Ui.dp(20);
             grid.addView(row, rlp);
         }
+        sizeFavoriteRows();
         if (favs.isEmpty()) {
             selKind.setText("Bem-vindo");
             selName.setText("Escolha seus apps");
@@ -395,43 +461,41 @@ public class HomeActivity extends Activity {
         if (first != null && getCurrentFocus() == null) first.requestFocus();
     }
 
-    private View tile(final Apps.Entry a, int index) {
-        final int color = Ui.appColor(a.pkg, a.icon, index);
-        // No escuro o vidro escurece a cor, entao o texto e sempre branco.
-        final int fg = Ui.dark ? 0xFFFFFFFF : Ui.onColor(color);
-        LinearLayout t = Ui.col(this);
-        t.setContentDescription(a.label);
-        t.setPadding(Ui.dp(18), Ui.dp(18), Ui.dp(18), Ui.dp(18));
-        GradientDrawable bg = Ui.round(color, 28);
-        t.setBackground(bg);
-
-        FrameLayout box = new FrameLayout(this);
-        box.setBackground(Ui.round(0xFFFFFFFF, 16));
-        box.setElevation(Ui.dp(1));
-        if (a.icon != null) {
-            ImageView iv = new ImageView(this);
-            iv.setImageDrawable(a.icon);
-            box.addView(iv, new FrameLayout.LayoutParams(Ui.dp(42), Ui.dp(42), Gravity.CENTER));
+    private void sizeFavoriteRows() {
+        int width = grid.getWidth() - grid.getPaddingLeft() - grid.getPaddingRight();
+        if (width <= Ui.dp(16) * (COLS - 1)) return;
+        int height = Math.round((width - Ui.dp(16) * (COLS - 1)) / (float) COLS * 9f / 16f);
+        for (int i = 0; i < grid.getChildCount(); i++) {
+            View row = grid.getChildAt(i);
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) row.getLayoutParams();
+            if (lp.height == height) continue;
+            lp.height = height;
+            row.setLayoutParams(lp);
         }
-        t.addView(box, new LinearLayout.LayoutParams(Ui.dp(58), Ui.dp(58)));
-        t.addView(Ui.vspace(this, 1));
+    }
 
-        TextView name = Ui.text(this, a.label, 19, Ui.w700, fg);
-        name.setMaxLines(2);
-        name.setEllipsize(TextUtils.TruncateAt.END);
-        name.setLetterSpacing(-0.01f);
-        t.addView(name, new LinearLayout.LayoutParams(-1, -2));
-        TextView kind = Ui.text(this, Apps.kind(a.pkg), 13, Ui.w500, fg);
-        kind.setAlpha(0.78f);
-        LinearLayout.LayoutParams klp = new LinearLayout.LayoutParams(-1, -2);
-        klp.topMargin = Ui.dp(5);
-        t.addView(kind, klp);
-
-        Ui.focusable(t, bg, 1.06f, () -> {
+    private View tile(final Apps.Entry a) {
+        FrameLayout t = new FrameLayout(this);
+        t.setContentDescription(a.label);
+        t.setBackground(Ui.round(0xFF15161C, 12));
+        t.setClipToOutline(true);
+        Drawable banner = Apps.banner(this, a.pkg);
+        ImageView art = new ImageView(this);
+        if (banner != null) {
+            art.setImageDrawable(banner);
+            art.setScaleType(ImageView.ScaleType.FIT_XY);
+        } else {
+            art.setImageDrawable(a.icon);
+            art.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            art.setPadding(Ui.dp(12), Ui.dp(12), Ui.dp(12), Ui.dp(12));
+        }
+        art.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        t.addView(art, new FrameLayout.LayoutParams(-1, -1));
+        Ui.focusableIcon(t, () -> {
             selKind.setText(Apps.kind(a.pkg));
             selName.setText(a.label);
             App.inst.controller.onScreen(getPackageName(), a.label);
-        }, color);
+        });
         t.setOnClickListener(v -> open(Apps.launchIntent(this, a.pkg)));
         t.setOnLongClickListener(v -> {
             Prefs.toggleFav(this, a.pkg);
@@ -445,15 +509,11 @@ public class HomeActivity extends Activity {
     private View addTile() {
         LinearLayout t = Ui.col(this);
         t.setGravity(Gravity.CENTER);
-        GradientDrawable bg = Ui.glass(28);
+        GradientDrawable bg = Ui.glass(12);
         t.setBackground(bg);
         t.addView(Ui.icon(this, R.drawable.ic_plus, 30, Ui.MUTED));
         t.setContentDescription("Adicionar app");
-        TextView l = Ui.text(this, "Adicionar", 14, Ui.w600, Ui.MUTED);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, -2);
-        lp.topMargin = Ui.dp(10);
-        t.addView(l, lp);
-        Ui.focusable(t, bg, 1.06f, () -> {
+        Ui.focusableIcon(t, () -> {
             selKind.setText("Favoritos");
             selName.setText("Adicionar app");
         });
@@ -556,14 +616,21 @@ public class HomeActivity extends Activity {
     }
 
     private void settingsMenu() {
-        String[] items = {"Ajustes do Android", "Procurar atualização", "Gerar novo PIN do controle", "Voltar à tela original e remover o app"};
+        String hardwareAction = Prefs.showHardware(this)
+                ? "Ocultar temperatura, CPU, RAM, espaço e internet" : "Mostrar temperatura, CPU, RAM, espaço e internet";
+        String[] items = {"Ajustes do Android", hardwareAction, "Testar velocidade da internet", "Procurar atualização", "Gerar novo PIN do controle", "Voltar à tela original e remover o app"};
         dialog().setTitle("Ajustes").setItems(items, (dlg, which) -> {
             if (which == 0) {
                 Intent tv = comp("com.android.tv.settings", "com.android.tv.settings.MainSettings");
                 open(available(tv) ? tv : new Intent(Settings.ACTION_SETTINGS));
             } else if (which == 1) {
-                procurarAtualizacao();
+                Prefs.setShowHardware(this, !Prefs.showHardware(this));
+                applyHardwareVisibility();
             } else if (which == 2) {
+                testInternet();
+            } else if (which == 3) {
+                procurarAtualizacao();
+            } else if (which == 4) {
                 dialog().setTitle("Gerar novo PIN?")
                         .setMessage("Os celulares conectados e os atalhos da Siri vão precisar do PIN novo.")
                         .setPositiveButton("Gerar", (x, y) -> App.inst.server.regeneratePin())
@@ -597,9 +664,66 @@ public class HomeActivity extends Activity {
         String pin = Prefs.pin(this);
         info.setText("Controle no celular  " + ip + ":" + ControlService.PORT + "  ·  PIN " + pin);
         updateQr(ip, pin);
+    }
+
+    private void updateHardware() {
+        temperatureUsage.setTemperature(Temperature.readHighest());
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
         am.getMemoryInfo(mi);
-        memory.setText("Memória livre " + (mi.availMem / (1024 * 1024)) + " MB");
+        cpuUsage.setUsage(hardware.readCpu());
+        ramUsage.setUsage(HardwareUsage.percent(mi.availMem, mi.totalMem));
+        int storagePercent = -1;
+        try {
+            StatFs storage = new StatFs(Environment.getDataDirectory().getAbsolutePath());
+            storagePercent = HardwareUsage.percent(storage.getAvailableBytes(), storage.getTotalBytes());
+        } catch (IllegalArgumentException e) {
+            android.util.Log.w("Projetor", "Armazenamento indisponível", e);
+        }
+        storageUsage.setUsage(storagePercent);
+    }
+
+    private void applyHardwareVisibility() {
+        handler.removeCallbacks(hardwareTick);
+        hardware.resetCpu();
+        boolean show = Prefs.showHardware(this);
+        hardwarePanel.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (show) {
+            cpuUsage.setUsage(-1);
+            handler.post(hardwareTick);
+            App.inst.testInternet(false);
+        } else {
+            App.inst.cancelInternetTest();
+        }
+    }
+
+    private void testInternet() {
+        if (!Prefs.showHardware(this)) {
+            App.inst.controller.hud.message("Mostre os gráficos para testar a internet.");
+            return;
+        }
+        if (App.inst.testingInternet) {
+            App.inst.controller.hud.message("Teste de internet em andamento…");
+            return;
+        }
+        String last = Prefs.downloadKbps(this) < 0 ? "Nenhum teste realizado."
+                : "Último teste: " + UsageRing.speedText(Prefs.downloadKbps(this)) + " Mbps em "
+                        + Prefs.downloadCheckedAt(this) + ".";
+        dialog().setTitle("Testar velocidade da internet")
+                .setMessage(last + "\n\nO teste estima o download de 20MB pela Cloudflare. "
+                        + "Pode afetar vídeos em reprodução.")
+                .setPositiveButton("Testar", (d, w) -> App.inst.testInternet(true))
+                .setNegativeButton("Cancelar", null).show();
+    }
+
+    static void refreshInternet(String message) {
+        HomeActivity h = current;
+        if (h == null || h.isDestroyed() || h.isFinishing()) return;
+        h.runOnUiThread(() -> {
+            if (App.inst.testingInternet) h.internetUsage.setLoading();
+            else h.internetUsage.setSpeed(Prefs.downloadKbps(h), Prefs.downloadCheckedAt(h));
+            if (message != null && h.hasWindowFocus()) h.dialog().setTitle("Velocidade da internet")
+                    .setMessage(message).setPositiveButton("OK", null).show();
+        });
     }
 }

@@ -23,8 +23,13 @@ import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Servidor HTTP + WebSocket minimo (sem dependencias) na rede local.
@@ -34,12 +39,17 @@ final class WebServer {
     private static final String TAG = "Projetor";
     private static final String WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
     private static final long MIN_FREE_BYTES = 300L * 1024 * 1024;
+    private static final int MAX_WORKERS = 8;
+    private static final int MAX_PENDING = 16;
+    private static final int MAX_WEBSOCKETS = 4;
 
     private final Context ctx;
     private final Controller ctl;
     private final Voice voice;
     private final int port;
-    private final ExecutorService pool = Executors.newCachedThreadPool();
+    private final ThreadPoolExecutor pool = new ThreadPoolExecutor(MAX_WORKERS, MAX_WORKERS, 0,
+            TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(MAX_PENDING));
+    private final AtomicInteger webSockets = new AtomicInteger();
     private volatile boolean running;
     private ServerSocket server;
 
@@ -87,7 +97,11 @@ final class WebServer {
                         s.close();
                         continue;
                     }
-                    pool.execute(() -> handle(s));
+                    try {
+                        pool.execute(() -> handle(s));
+                    } catch (RejectedExecutionException e) {
+                        s.close();
+                    }
                 }
             } catch (IOException e) {
                 if (!running) return;
@@ -156,6 +170,10 @@ final class WebServer {
     }
 
     private void route(Req r, Socket s, OutputStream out) throws IOException {
+        if ("OPTIONS".equals(r.method)) {
+            preflight(r, out);
+            return;
+        }
         String p = r.path;
         if (p.equals("/") || p.equals("/index.html")) {
             asset(out, "web/index.html", "text/html; charset=utf-8");
@@ -438,31 +456,40 @@ final class WebServer {
     }
 
     private void websocket(Req r, Socket s, OutputStream out) throws IOException {
-        String key = r.h.get("sec-websocket-key");
-        if (key == null) {
-            json(out, 400, "{\"ok\":false}");
+        if (webSockets.incrementAndGet() > MAX_WEBSOCKETS) {
+            webSockets.decrementAndGet();
+            json(out, 503, "{\"ok\":false,\"erro\":\"controles demais conectados\"}");
             return;
         }
-        String accept;
         try {
-            MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
-            accept = Base64.encodeToString(sha1.digest((key + WS_GUID).getBytes(StandardCharsets.UTF_8)), Base64.NO_WRAP);
-        } catch (Exception e) {
-            throw new IOException(e);
-        }
-        out.write(("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
-                + "Sec-WebSocket-Accept: " + accept + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
-        out.flush();
-        s.setSoTimeout(0);
-        clients.add(out);
-        try {
-            synchronized (out) {
-                // Estado inicial da tela assim que o celular conecta.
-                frame(out, 0x1, ctl.stateJson().getBytes(StandardCharsets.UTF_8));
+            String key = r.h.get("sec-websocket-key");
+            if (key == null) {
+                json(out, 400, "{\"ok\":false}");
+                return;
             }
-            readFrames(r.in, out);
+            String accept;
+            try {
+                MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+                accept = Base64.encodeToString(sha1.digest((key + WS_GUID).getBytes(StandardCharsets.UTF_8)), Base64.NO_WRAP);
+            } catch (Exception e) {
+                throw new IOException(e);
+            }
+            out.write(("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
+                    + "Sec-WebSocket-Accept: " + accept + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            s.setSoTimeout(0);
+            clients.add(out);
+            try {
+                synchronized (out) {
+                    // Estado inicial da tela assim que o celular conecta.
+                    frame(out, 0x1, ctl.stateJson().getBytes(StandardCharsets.UTF_8));
+                }
+                readFrames(r.in, out);
+            } finally {
+                clients.remove(out);
+            }
         } finally {
-            clients.remove(out);
+            webSockets.decrementAndGet();
         }
     }
 
@@ -534,14 +561,34 @@ final class WebServer {
         send(out, code, "application/json; charset=utf-8", body.getBytes(StandardCharsets.UTF_8));
     }
 
+    /** Chromium consulta a permissao da rede local antes do fetch; nunca executa a acao no preflight. */
+    private static void preflight(Req r, OutputStream out) throws IOException {
+        String origin = r.h.get("origin");
+        String host = r.h.get("host");
+        if (origin == null || host == null || !origin.equals("http://" + host)) {
+            send(out, 403, "text/plain", new byte[0]);
+            return;
+        }
+        out.write(("HTTP/1.1 204 No Content\r\n"
+                + "Access-Control-Allow-Origin: " + origin + "\r\n"
+                + "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+                + "Access-Control-Allow-Headers: Content-Type, X-Pin\r\n"
+                + "Access-Control-Allow-Private-Network: true\r\n"
+                + "Access-Control-Max-Age: 600\r\n"
+                + "Vary: Origin\r\nCache-Control: no-store\r\nContent-Length: 0\r\n"
+                + "Connection: close\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+    }
+
     private static void send(OutputStream out, int code, String type, byte[] body) throws IOException {
         String status;
         switch (code) {
             case 200: status = "OK"; break;
             case 400: status = "Bad Request"; break;
             case 401: status = "Unauthorized"; break;
+            case 403: status = "Forbidden"; break;
             case 404: status = "Not Found"; break;
             case 405: status = "Method Not Allowed"; break;
+            case 503: status = "Service Unavailable"; break;
             case 507: status = "Insufficient Storage"; break;
             default: status = "Error";
         }

@@ -229,6 +229,16 @@ final class Ui {
         return v;
     }
 
+    /** Favoritos: o foco muda apenas o tamanho, preservando a arte sem contorno. */
+    static void focusableIcon(final View v, final Runnable onFocus) {
+        v.setFocusable(true);
+        v.setClickable(true);
+        v.setOnFocusChangeListener((view, has) -> {
+            view.animate().scaleX(has ? 1.15f : 1f).scaleY(has ? 1.15f : 1f).setDuration(160).start();
+            if (has && onFocus != null) onFocus.run();
+        });
+    }
+
     /** Foco do controle remoto ao estilo Apple TV: cresce, ganha sombra e um contorno fino. */
     static void focusable(final View v, final GradientDrawable bg, final float scale, final Runnable onFocus) {
         focusable(v, bg, scale, onFocus, 0);
