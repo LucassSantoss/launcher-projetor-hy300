@@ -40,6 +40,7 @@
         <activity
             android:name=".HomeActivity"
             android:exported="true"
+            android:directBootAware="true"
             android:launchMode="singleTask"
             android:stateNotNeeded="true"
             android:excludeFromRecents="true"

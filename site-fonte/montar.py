@@ -6,14 +6,16 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(os.path.dirname(HERE), 'site')
-VERSAO = '4.6.1'
+VERSAO = '4.6.2'
 
 
 def read(name):
     return open(os.path.join(HERE, name), encoding='utf-8').read()
 
 
-apk = os.path.join(OUT, 'downloads', 'Projetor.apk')
+apk = os.path.join(OUT, 'downloads', 'MS-Projetor-v4.6.2.apk')
+if not os.path.exists(apk):
+    apk = os.path.join(OUT, 'downloads', 'Projetor.apk') # Fallback for local dev
 sha = hashlib.sha256(open(apk, 'rb').read()).hexdigest()
 s = read('base.html')
 desc = 'Tela inicial nova e controle pelo celular para projetores, TV Boxes e Smart TVs. Como instalar, usar e remover.'
