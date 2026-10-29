@@ -16,12 +16,12 @@ def read(name):
 apk = os.path.join(OUT, 'downloads', 'Projetor.apk')
 sha = hashlib.sha256(open(apk, 'rb').read()).hexdigest()
 s = read('base.html')
-desc = 'Tela inicial nova e controle pelo celular para projetores HY300 e parecidos. Como instalar, usar e remover.'
-for o, n in [('<title>TÍTULO DA PÁGINA — MLAB</title>', '<title>Projetor para HY300</title>'),
+desc = 'Tela inicial nova e controle pelo celular para projetores, TV Boxes e Smart TVs. Como instalar, usar e remover.'
+for o, n in [('<title>TÍTULO DA PÁGINA — MLAB</title>', '<title>M Soluction — Projetores, TV Boxes e Smart TVs</title>'),
              ('<meta name="description" content="DESCRIÇÃO EM ATÉ 155 CARACTERES.">', '<meta name="description" content="%s">' % desc),
-             ('<meta property="og:title" content="TÍTULO DA PÁGINA — MLAB">', '<meta property="og:title" content="Projetor para HY300">'),
+             ('<meta property="og:title" content="TÍTULO DA PÁGINA — MLAB">', '<meta property="og:title" content="M Soluction — Projetores, TV Boxes e Smart TVs">'),
              ('<meta property="og:description" content="DESCRIÇÃO EM ATÉ 155 CARACTERES.">', '<meta property="og:description" content="%s">' % desc),
-             ('<meta property="og:type" content="website">', '<meta property="og:type" content="website">\n<meta property="og:image" content="passos/06-tela-inicial.webp">\n<meta name="author" content="MLAB SOLUCTION">\n<meta property="og:site_name" content="MLAB SOLUCTION">')]:
+             ('<meta property="og:type" content="website">', '<meta property="og:type" content="website">\n<meta property="og:image" content="passos/06-tela-inicial.webp">\n<meta name="author" content="M SOLUCTION">\n<meta property="og:site_name" content="M SOLUCTION">')]:
     assert s.count(o) == 1, o
     s = s.replace(o, n)
 i = s.index('</style>')

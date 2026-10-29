@@ -9,8 +9,11 @@ SDK=/c/dev/android/sdk
 BT=$SDK/build-tools/34.0.0
 AJ=$SDK/platforms/android-30/android.jar
 KEYS=/c/dev/android/keys
-VERSION_CODE=${VERSION_CODE:-1}
-VERSION_NAME=${VERSION_NAME:-1.0}
+
+# Lê a versão do AndroidManifest.xml (não usa mais valores hardcoded)
+VERSION_CODE=$(grep -oP 'android:versionCode="\K[0-9]+' AndroidManifest.xml || echo "1")
+VERSION_NAME=$(grep -oP 'android:versionName="\K[^"]+' AndroidManifest.xml || echo "1.0")
+echo "Compilando versão $VERSION_NAME (code $VERSION_CODE)..."
 
 rm -rf build && mkdir -p build/gen build/classes build/dex
 

@@ -45,7 +45,7 @@ final class Hardware {
         // Allwinner: sunxi, aw, allwinner
         if (contains(hardware, "sunxi", "aw", "allwinner") ||
             contains(platform, "sunxi", "aw", "allwinner") ||
-            contains(model, "hy300", "hy-300")) {
+            contains(model, "hy300", "hy-300", "hy320", "hy-320", "hy300mini", "hy320mini")) {
             cachedChipset = Chipset.ALLWINNER;
         }
         // Rockchip: rk, rockchip

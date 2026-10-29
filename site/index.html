@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Projetor para HY300</title>
-<meta name="description" content="Tela inicial nova e controle pelo celular para projetores HY300 e parecidos. Como instalar, usar e remover.">
-<meta property="og:title" content="Projetor para HY300">
-<meta property="og:description" content="Tela inicial nova e controle pelo celular para projetores HY300 e parecidos. Como instalar, usar e remover.">
+<title>M Soluction — Projetores, TV Boxes e Smart TVs</title>
+<meta name="description" content="Tela inicial nova e controle pelo celular para projetores, TV Boxes e Smart TVs. Como instalar, usar e remover.">
+<meta property="og:title" content="M Soluction — Projetores, TV Boxes e Smart TVs">
+<meta property="og:description" content="Tela inicial nova e controle pelo celular para projetores, TV Boxes e Smart TVs. Como instalar, usar e remover.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="passos/06-tela-inicial.webp">
-<meta name="author" content="MLAB SOLUCTION">
-<meta property="og:site_name" content="MLAB SOLUCTION">
+<meta name="author" content="M SOLUCTION">
+<meta property="og:site_name" content="M SOLUCTION">
 <meta name="theme-color" content="#0A0A0A">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -646,7 +646,7 @@ code{font-family:var(--font-mono);font-size:.9em}
         <a href="https://github.com/krnsubmundoclan-web/projetor-hy300" target="_blank" rel="noopener">Código no GitHub ↗</a>
       </div>
     </div>
-    <details class="foot__hash"><summary>Conferir o arquivo (SHA-256)</summary><code>3a9dca82ce5b05e821a8faca61278d536e3a84c2175584161911f720060bebe2</code></details>
+    <details class="foot__hash"><summary>Conferir o arquivo (SHA-256)</summary><code>75f35d951a075351d41d6c3924838fd6a28496646626b4e1f5b4fe4cef13f017</code></details>
     <div class="footer__bottom">
       <span>&copy; <span data-year></span> MLAB SOLUCTION</span>
       <span>Sem vínculo com os fabricantes · Sem garantia</span>
@@ -659,7 +659,7 @@ Quero instalar o app "Projetor" no meu projetor Android (HY300 ou parecido), que
 
 1. Veja se o ADB (Android Platform Tools) está instalado. Se não estiver, peça permissão e baixe somente do site oficial do Google: https://dl.google.com/android/repository/platform-tools-latest-<windows|darwin|linux>.zip (use a versão do meu sistema).
 2. Encontre o projetor: procure na rede local aparelhos com a porta 5555 aberta, conecte com "adb connect IP:5555" e me mostre o modelo (getprop ro.product.model), o fabricante e a versão do Android. Se houver mais de um, pergunte qual é o meu. Se o estado ficar "unauthorized", me peça para aceitar o aviso "Permitir depuração" na tela do projetor com o controle.
-3. Baixe o app do repositório oficial no GitHub (https://github.com/krnsubmundoclan-web/projetor-hy300), versão 4.5.3: https://github.com/krnsubmundoclan-web/projetor-hy300/releases/download/v4.5.3/Projetor.apk (se não conseguir, use __ORIGEM__/downloads/Projetor.apk). Confira o SHA-256: ele precisa ser 3a9dca82ce5b05e821a8faca61278d536e3a84c2175584161911f720060bebe2. Se for diferente, pare e me avise.
+3. Baixe o app do repositório oficial no GitHub (https://github.com/krnsubmundoclan-web/projetor-hy300), versão 4.5.3: https://github.com/krnsubmundoclan-web/projetor-hy300/releases/download/v4.5.3/Projetor.apk (se não conseguir, use __ORIGEM__/downloads/Projetor.apk). Confira o SHA-256: ele precisa ser 75f35d951a075351d41d6c3924838fd6a28496646626b4e1f5b4fe4cef13f017. Se for diferente, pare e me avise.
 4. Antes de instalar, anote e me mostre como o projetor está: a tela inicial padrão (cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME) e a configuração enabled_accessibility_services.
 5. Instale com "adb install -r Projetor.apk". Se aparecer INSTALL_FAILED_SHARED_USER_INCOMPATIBLE, me explique que o sistema deste projetor não é compatível com o app, pare e não altere mais nada.
 6. Se instalar, abra o app com "adb shell am start -n com.mlab.projetor/.HomeActivity". Ele se define sozinho como tela inicial e desliga o modo mouse do fabricante. Confirme que a tela inicial padrão agora é com.mlab.projetor e me diga que o controle pelo celular aparece no botão "Celular" da tela do projetor.
