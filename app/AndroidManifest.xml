@@ -2,8 +2,8 @@
 <!-- App universal: funciona como usuario padrao (sem sharedUserId) para compatibilidade com HY320, TV Boxes, etc. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.mlab.projetor"
-    android:versionCode="53"
-    android:versionName="4.6.3">
+    android:versionCode="54"
+    android:versionName="4.6.4">
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
