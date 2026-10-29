@@ -255,6 +255,24 @@ final class WebServer {
                     Sistema.restoreAndUninstall(ctx);
                 }, 500);
                 return;
+            case "/api/factory-reset":
+                if (!"POST".equals(r.method)) {
+                    json(out, 405, "{\"ok\":false,\"erro\":\"use POST\"}");
+                    return;
+                }
+                ok(out, true);
+                out.flush();
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                    ctl.hud.message("Restaurando configurações de fábrica…");
+                    try {
+                        // Limpa dados do app e reinicia
+                        Runtime.getRuntime().exec("pm clear com.mlab.projetor");
+                        System.exit(0);
+                    } catch (Exception e) {
+                        ctl.hud.message("Erro ao restaurar: " + e.getMessage());
+                    }
+                }, 500);
+                return;
             case "/api/adb":
                 if ("POST".equals(r.method) && r.q.containsKey("on")) {
                     try {

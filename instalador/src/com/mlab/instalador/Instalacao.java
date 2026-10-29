@@ -24,11 +24,12 @@ final class Instalacao {
         }
     }
 
-    enum Resultado { OK, INCOMPATIVEL, ANDROID_ANTIGO, OUTRA_VERSAO, VERSAO_MAIS_NOVA, SEM_ESPACO, ERRO }
+    enum Resultado { OK, INCOMPATIVEL, ANDROID_ANTIGO, OUTRA_VERSAO, VERSAO_MAIS_NOVA, SEM_ESPACO, ERRO_MANIFESTO, ERRO }
 
     static final class Saida {
         Resultado resultado;
         String detalhe = "";
+        String codigoErro = ""; // Código para suporte identificar o problema
         boolean telaInicial;
     }
 
@@ -65,14 +66,32 @@ final class Instalacao {
         s.detalhe = out;
         if (!out.contains("Success")) {
             String u = out.toUpperCase(Locale.ROOT);
-            if (u.contains("SHARED_USER_INCOMPATIBLE")) s.resultado = Resultado.INCOMPATIVEL;
-            else if (u.contains("UPDATE_INCOMPATIBLE")) s.resultado = Resultado.OUTRA_VERSAO;
-            else if (u.contains("VERSION_DOWNGRADE")) s.resultado = Resultado.VERSAO_MAIS_NOVA;
+            if (u.contains("SHARED_USER_INCOMPATIBLE")) {
+                s.resultado = Resultado.INCOMPATIVEL;
+                s.codigoErro = "ERR_102_SHARED_USER";
+            }
+            else if (u.contains("MANIFEST_MALFORMED") || u.contains("PARSE_FAILED")) {
+                s.resultado = Resultado.ERRO_MANIFESTO;
+                s.codigoErro = "ERR_101_MANIFEST";
+                s.detalhe = "Erro de compatibilidade do sistema (Android 12+). O instalador tentará uma versão universal.";
+            }
+            else if (u.contains("UPDATE_INCOMPATIBLE")) {
+                s.resultado = Resultado.OUTRA_VERSAO;
+                s.codigoErro = "ERR_103_UPDATE";
+            }
+            else if (u.contains("VERSION_DOWNGRADE")) {
+                s.resultado = Resultado.VERSAO_MAIS_NOVA;
+                s.codigoErro = "ERR_104_DOWNGRADE";
+            }
             else if (u.contains("INSUFFICIENT_STORAGE") || u.contains("NOT_ENOUGH_SPACE")) {
                 s.resultado = Resultado.SEM_ESPACO;
+                s.codigoErro = "ERR_105_SPACE";
                 s.detalhe = "O projetor está sem espaço interno suficiente para instalar o app. Apague alguns aplicativos ou arquivos no projetor (Ajustes → Armazenamento) e tente novamente.";
             }
-            else s.resultado = Resultado.ERRO;
+            else {
+                s.resultado = Resultado.ERRO;
+                s.codigoErro = "ERR_999_UNKNOWN";
+            }
             return s;
         }
         s.resultado = Resultado.OK;
