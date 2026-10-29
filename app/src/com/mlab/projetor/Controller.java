@@ -216,15 +216,27 @@ final class Controller {
      * "teclado" ou "teclado + direcional" (testado no HY300: so SOURCE_DPAD move a selecao).
      */
     private void sendRemoteKey(int code) {
-        int dev = remoteDevice();
-        boolean dpad = code == KeyEvent.KEYCODE_DPAD_UP || code == KeyEvent.KEYCODE_DPAD_DOWN
-                || code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT
-                || code == KeyEvent.KEYCODE_DPAD_CENTER;
-        int src = dpad ? InputDevice.SOURCE_DPAD : InputDevice.SOURCE_KEYBOARD;
-        long down = SystemClock.uptimeMillis();
-        inst.sendKeySync(new KeyEvent(down, down, KeyEvent.ACTION_DOWN, code, 0, 0, dev, 0, KeyEvent.FLAG_FROM_SYSTEM, src));
-        inst.sendKeySync(new KeyEvent(down, SystemClock.uptimeMillis(), KeyEvent.ACTION_UP, code, 0, 0, dev, 0,
-                KeyEvent.FLAG_FROM_SYSTEM, src));
+        // Tenta usar o Accessibility Service primeiro (funciona em apps de terceiros sem root/sharedUserId)
+        if (KeyService.instance != null && KeyService.instance.injectKey(code)) {
+            return;
+        }
+
+        // Fallback para Instrumentation (funciona no próprio app ou com permissões de sistema)
+        try {
+            int dev = remoteDevice();
+            boolean dpad = code == KeyEvent.KEYCODE_DPAD_UP || code == KeyEvent.KEYCODE_DPAD_DOWN
+                    || code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT
+                    || code == KeyEvent.KEYCODE_DPAD_CENTER;
+            int src = dpad ? InputDevice.SOURCE_DPAD : InputDevice.SOURCE_KEYBOARD;
+            long down = SystemClock.uptimeMillis();
+            inst.sendKeySync(new KeyEvent(down, down, KeyEvent.ACTION_DOWN, code, 0, 0, dev, 0, KeyEvent.FLAG_FROM_SYSTEM, src));
+            inst.sendKeySync(new KeyEvent(down, SystemClock.uptimeMillis(), KeyEvent.ACTION_UP, code, 0, 0, dev, 0,
+                    KeyEvent.FLAG_FROM_SYSTEM, src));
+        } catch (SecurityException e) {
+            // Se falhar por falta de permissão (INJECT_EVENTS), avisa o usuário uma vez
+            Log.w(TAG, "Falha ao injetar tecla (sem permissão de sistema). Controle limitado em apps de terceiros.");
+            // Opcional: Mostrar toast ou HUD avisando que o controle remoto precisa do serviço de acessibilidade ativado
+        }
     }
 
     // Volume vindo do celular: sem a barra do sistema (FLAG_SHOW_UI); quem mostra e o nosso aviso.

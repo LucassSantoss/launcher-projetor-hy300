@@ -468,7 +468,7 @@ code{font-family:var(--font-mono);font-size:.9em}
         <div class="tabs__panel" role="tabpanel" id="p-projetor" aria-labelledby="tab-projetor">
           <div class="method-head">
             <p class="muted">Com um pendrive e o controle do projetor</p>
-            <a href="downloads/MS-Projetor-v4.6.2.apk" class="btn btn--ghost" download>Baixar APK (v4.6.2)</a>
+            <a href="downloads/MS-Projetor-v4.6.3.apk" class="btn btn--ghost" download>Baixar APK (v4.6.3)</a>
           </div>
           <ol class="steps">
             <li class="step">
@@ -504,7 +504,7 @@ code{font-family:var(--font-mono);font-size:.9em}
         <div class="tabs__panel" role="tabpanel" id="p-celular" aria-labelledby="tab-celular">
           <div class="method-head">
             <p class="muted">Pelo celular, no mesmo Wi‑Fi do projetor</p>
-            <a href="downloads/MS-Instalador-v4.6.2.apk" class="btn btn--ghost" download>Baixar instalador (v4.6.2)</a>
+            <a href="downloads/MS-Instalador-v4.6.3.apk" class="btn btn--ghost" download>Baixar instalador (v4.6.3)</a>
           </div>
           <ol class="steps steps--phones">
             <li class="step"><div class="step__text"><h3>Abra e toque em Procurar</h3><p class="subtle">Antes, <a href="#adb" data-open-adb>ligue o ADB no projetor</a>. Se o Android pedir, permita instalar desta fonte</p></div><figure class="phone" aria-label="Ilustração da tela do instalador"><div class="phone__screen"><p class="ph-t">Instalar o Projetor</p><p class="ph-s">Tela nova e controle pelo celular</p><div class="ph-step"><span>1</span>Mesmo Wi‑Fi</div><div class="ph-step"><span>2</span>Depuração USB ligada</div><div class="ph-btn">Procurar projetor</div><p class="ph-s ph-s--sm">Ou digite o IP</p><div class="ph-input">192.168.0.20</div><div class="ph-btn ph-btn--ghost">Conectar</div></div></figure></li>
@@ -640,13 +640,13 @@ code{font-family:var(--font-mono);font-size:.9em}
       </nav>
       <div class="foot__col">
         <p class="badge">Downloads</p>
-        <a href="downloads/MS-Projetor-v4.6.2.apk" download>MS Projetor · v4.6.2</a>
-        <a href="downloads/MS-Instalador-v4.6.2.apk" download>Instalador Android · v4.6.2</a>
+        <a href="downloads/MS-Projetor-v4.6.3.apk" download>MS Projetor · v4.6.3</a>
+        <a href="downloads/MS-Instalador-v4.6.3.apk" download>Instalador Android · v4.6.3</a>
         <a href="downloads/projetor-kit-pc.zip" download>Kit para Windows</a>
         <a href="https://github.com/krnsubmundoclan-web/projetor-hy300" target="_blank" rel="noopener">Código no GitHub ↗</a>
       </div>
     </div>
-    <details class="foot__hash"><summary>Conferir o arquivo (SHA-256)</summary><code>75f35d951a075351d41d6c3924838fd6a28496646626b4e1f5b4fe4cef13f017</code></details>
+    <details class="foot__hash"><summary>Conferir o arquivo (SHA-256)</summary><code>9bd35e1676076c25aa6950333602eb1855604847ff9c370e156205a0fd0dd9dc</code></details>
     <div class="footer__bottom">
       <span>&copy; <span data-year></span> MLAB SOLUCTION</span>
       <span>Sem vínculo com os fabricantes · Sem garantia</span>
@@ -659,7 +659,7 @@ Quero instalar o app "Projetor" no meu projetor Android (HY300 ou parecido), que
 
 1. Veja se o ADB (Android Platform Tools) está instalado. Se não estiver, peça permissão e baixe somente do site oficial do Google: https://dl.google.com/android/repository/platform-tools-latest-<windows|darwin|linux>.zip (use a versão do meu sistema).
 2. Encontre o projetor: procure na rede local aparelhos com a porta 5555 aberta, conecte com "adb connect IP:5555" e me mostre o modelo (getprop ro.product.model), o fabricante e a versão do Android. Se houver mais de um, pergunte qual é o meu. Se o estado ficar "unauthorized", me peça para aceitar o aviso "Permitir depuração" na tela do projetor com o controle.
-3. Baixe o app do repositório oficial no GitHub (https://github.com/krnsubmundoclan-web/projetor-hy300), versão 4.5.3: https://github.com/krnsubmundoclan-web/projetor-hy300/releases/download/v4.5.3/Projetor.apk (se não conseguir, use __ORIGEM__/downloads/Projetor.apk). Confira o SHA-256: ele precisa ser 75f35d951a075351d41d6c3924838fd6a28496646626b4e1f5b4fe4cef13f017. Se for diferente, pare e me avise.
+3. Baixe o app do repositório oficial no GitHub (https://github.com/krnsubmundoclan-web/projetor-hy300), versão 4.5.3: https://github.com/krnsubmundoclan-web/projetor-hy300/releases/download/v4.5.3/Projetor.apk (se não conseguir, use __ORIGEM__/downloads/Projetor.apk). Confira o SHA-256: ele precisa ser 9bd35e1676076c25aa6950333602eb1855604847ff9c370e156205a0fd0dd9dc. Se for diferente, pare e me avise.
 4. Antes de instalar, anote e me mostre como o projetor está: a tela inicial padrão (cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME) e a configuração enabled_accessibility_services.
 5. Instale com "adb install -r Projetor.apk". Se aparecer INSTALL_FAILED_SHARED_USER_INCOMPATIBLE, me explique que o sistema deste projetor não é compatível com o app, pare e não altere mais nada.
 6. Se instalar, abra o app com "adb shell am start -n com.mlab.projetor/.HomeActivity". Ele se define sozinho como tela inicial e desliga o modo mouse do fabricante. Confirme que a tela inicial padrão agora é com.mlab.projetor e me diga que o controle pelo celular aparece no botão "Celular" da tela do projetor.
