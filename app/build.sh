@@ -19,7 +19,7 @@ rm -rf build && mkdir -p build/gen build/classes build/dex
 
 "$BT/aapt2.exe" compile --dir res -o build/res.zip
 "$BT/aapt2.exe" link -o build/base.apk -I "$AJ" --manifest AndroidManifest.xml -A assets \
-  --java build/gen --min-sdk-version 28 --target-sdk-version 30 \
+  --java build/gen --min-sdk-version 28 --target-sdk-version 28 \
   --version-code "$VERSION_CODE" --version-name "$VERSION_NAME" build/res.zip
 
 javac -encoding UTF-8 -source 8 -target 8 -bootclasspath "$AJ" -classpath "$BT/core-lambda-stubs.jar" -Xlint:-options \
