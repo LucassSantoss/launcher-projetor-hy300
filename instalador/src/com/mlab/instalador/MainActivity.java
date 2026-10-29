@@ -356,9 +356,6 @@ public class MainActivity extends Activity {
             case SEM_ESPACO:
                 erro("Sem Espaço", "Libere espaço no projetor e tente novamente.", s.codigoErro);
                 return;
-            case ERRO_MANIFESTO:
-                erro("Erro de Manifesto", "Falha crítica de compatibilidade (Android 12+). Código: " + s.codigoErro, s.codigoErro);
-                return;
             default:
                 erro("Falha Desconhecida", s.detalhe, s.codigoErro.isEmpty() ? "ERR_UNKNOWN" : s.codigoErro);
         }
