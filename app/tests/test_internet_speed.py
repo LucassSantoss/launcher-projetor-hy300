@@ -30,12 +30,17 @@ public class InternetSpeedTest {
     static void check(boolean ok) { if (!ok) throw new AssertionError(); }
     public static void main(String[] args) throws Exception {
         long now = 1000000;
-        check(InternetSpeed.shouldTest(0,now));
-        check(!InternetSpeed.shouldTest(now,now));
-        check(!InternetSpeed.shouldTest(now-299999,now));
-        check(InternetSpeed.shouldTest(now-300000,now));
-        check(InternetSpeed.shouldTest(now-300001,now));
-        check(InternetSpeed.shouldTest(now+1,now));
+        check(!InternetSpeed.shouldTest(false,false,false,0,now));
+        check(!InternetSpeed.shouldTest(false,false,true,0,now));
+        check(!InternetSpeed.shouldTest(true,true,true,0,now));
+        check(!InternetSpeed.shouldTest(true,true,false,0,now));
+        check(InternetSpeed.shouldTest(true,false,true,now,now));
+        check(InternetSpeed.shouldTest(true,false,false,0,now));
+        check(!InternetSpeed.shouldTest(true,false,false,now,now));
+        check(!InternetSpeed.shouldTest(true,false,false,now-299999,now));
+        check(InternetSpeed.shouldTest(true,false,false,now-300000,now));
+        check(InternetSpeed.shouldTest(true,false,false,now-300001,now));
+        check(InternetSpeed.shouldTest(true,false,false,now+1,now));
         check(InternetSpeed.kbps(125000, 1000000000L)==1000);
         check(InternetSpeed.kbps(3125000, 1000000000L)==25000);
         try { InternetSpeed.kbps(0, 1); throw new AssertionError(); } catch(IOException expected) {}

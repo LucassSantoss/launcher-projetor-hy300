@@ -127,7 +127,6 @@ public class HomeActivity extends Activity {
         loadRecents();
         handler.post(tick);
         applyHardwareVisibility();
-        App.inst.testInternet(false);
         refreshInternet(null);
     }
 
@@ -671,10 +670,17 @@ public class HomeActivity extends Activity {
         if (show) {
             cpuUsage.setUsage(-1);
             handler.post(hardwareTick);
+            App.inst.testInternet(false);
+        } else {
+            App.inst.cancelInternetTest();
         }
     }
 
     private void testInternet() {
+        if (!Prefs.showHardware(this)) {
+            App.inst.controller.hud.message("Mostre os gráficos para testar a internet.");
+            return;
+        }
         if (App.inst.testingInternet) {
             App.inst.controller.hud.message("Teste de internet em andamento…");
             return;

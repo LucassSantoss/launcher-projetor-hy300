@@ -13,8 +13,9 @@ final class InternetSpeed {
 
     private InternetSpeed() {}
 
-    static boolean shouldTest(long lastAttempt, long now) {
-        return lastAttempt <= 0 || now < lastAttempt || now - lastAttempt >= 5 * 60_000L;
+    static boolean shouldTest(boolean visible, boolean running, boolean manual, long lastAttempt, long now) {
+        if (!visible || running) return false;
+        return manual || lastAttempt <= 0 || now < lastAttempt || now - lastAttempt >= 5 * 60_000L;
     }
 
     static int measureKbps() throws IOException {

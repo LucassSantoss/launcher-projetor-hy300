@@ -15,25 +15,35 @@ public class App extends Application {
     Controller controller;
     WebServer server;
     boolean testingInternet;
+    private Thread internetWorker;
+    private boolean internetCancelled;
 
     /** Chamado na thread principal; o teste continua se a Home for recriada ou perder o foco. */
     void testInternet(boolean manual) {
         long now = System.currentTimeMillis();
-        if (testingInternet) return;
-        if (!manual && !InternetSpeed.shouldTest(Prefs.downloadAttemptAt(this), now)) return;
+        long previousAttempt = Prefs.downloadAttemptAt(this);
+        if (!InternetSpeed.shouldTest(Prefs.showHardware(this), testingInternet, manual, previousAttempt, now)) return;
         testingInternet = true;
+        internetCancelled = false;
         Prefs.setDownloadAttemptAt(this, now);
         HomeActivity.refreshInternet(null);
-        new Thread(() -> {
+        internetWorker = new Thread(() -> {
             int kbps = -1;
             try {
                 kbps = InternetSpeed.measureKbps();
             } catch (java.io.IOException | SecurityException e) {
-                Log.w("Projetor", "Teste de internet indisponível", e);
+                if (!Thread.currentThread().isInterrupted()) Log.w("Projetor", "Teste de internet indisponível", e);
             }
             final int measured = kbps;
             new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                 testingInternet = false;
+                internetWorker = null;
+                if (internetCancelled) {
+                    Prefs.setDownloadAttemptAt(this, previousAttempt);
+                    HomeActivity.refreshInternet(null);
+                    if (Prefs.showHardware(this)) testInternet(false);
+                    return;
+                }
                 String message = "Não foi possível medir a velocidade. Verifique a conexão e tente novamente. "
                         + "O resultado anterior foi mantido.";
                 if (measured >= 0) {
@@ -46,7 +56,14 @@ public class App extends Application {
                 }
                 HomeActivity.refreshInternet(manual ? message : null);
             });
-        }, "internet-speed").start();
+        }, "internet-speed");
+        internetWorker.start();
+    }
+
+    void cancelInternetTest() {
+        if (internetWorker == null) return;
+        internetCancelled = true;
+        internetWorker.interrupt();
     }
 
     @Override
