@@ -12,10 +12,10 @@ public abstract class Context {
 }''',
     'android/content/SharedPreferences.java': '''package android.content;
 public interface SharedPreferences {
- String getString(String k, String d); boolean getBoolean(String k, boolean d); int getInt(String k, int d);
+ String getString(String k, String d); boolean getBoolean(String k, boolean d); int getInt(String k, int d); long getLong(String k, long d);
  Editor edit();
  interface Editor {
- Editor putString(String k, String v); Editor putBoolean(String k, boolean v); Editor putInt(String k, int v);
+ Editor putString(String k, String v); Editor putBoolean(String k, boolean v); Editor putInt(String k, int v); Editor putLong(String k, long v);
  Editor remove(String k); boolean commit(); void apply();
  }
 }''',
@@ -37,15 +37,29 @@ public class FavoritesTest extends Context implements SharedPreferences, SharedP
  public String getString(String k,String d) { return (String)data.getOrDefault(k,d); }
  public boolean getBoolean(String k,boolean d) { return (Boolean)data.getOrDefault(k,d); }
  public int getInt(String k,int d) { return (Integer)data.getOrDefault(k,d); }
+ public long getLong(String k,long d) { return (Long)data.getOrDefault(k,d); }
  public SharedPreferences.Editor edit() { return this; }
  public SharedPreferences.Editor putString(String k,String v) { data.put(k,v); return this; }
  public SharedPreferences.Editor putBoolean(String k,boolean v) { data.put(k,v); return this; }
  public SharedPreferences.Editor putInt(String k,int v) { data.put(k,v); return this; }
+ public SharedPreferences.Editor putLong(String k,long v) { data.put(k,v); return this; }
  public SharedPreferences.Editor remove(String k) { data.remove(k); return this; }
  public boolean commit() { return true; } public void apply() {}
  static void check(boolean ok) { if (!ok) throw new AssertionError(); }
  public static void main(String[] args) {
  FavoritesTest c = new FavoritesTest();
+ // Graficos visiveis por padrao; a escolha e preservada ao recriar o contexto.
+ check(Prefs.showHardware(c));
+ Prefs.setShowHardware(c,false); check(!Prefs.showHardware(c));
+ FavoritesTest restored = new FavoritesTest(); restored.data = c.data;
+ check(!Prefs.showHardware(restored));
+ Prefs.setShowHardware(restored,true); check(Prefs.showHardware(c));
+ check(Prefs.downloadKbps(c)==-1); check(Prefs.downloadCheckedAt(c).isEmpty());
+ Prefs.setDownloadResult(c,25500,"29/10 12:00");
+ check(Prefs.downloadKbps(restored)==25500);
+ check(Prefs.downloadCheckedAt(restored).equals("29/10 12:00"));
+ check(Prefs.downloadAttemptAt(c)==0);
+ Prefs.setDownloadAttemptAt(c,123456789L); check(Prefs.downloadAttemptAt(restored)==123456789L);
  // Dois favoritos instalados entre os oito padroes; seis novos devem caber sem substituicao.
  for (int i=1;i<=6;i++) check(Prefs.toggleFav(c,"app"+i));
  List<String> eight = Prefs.favs(c);
@@ -57,7 +71,7 @@ public class FavoritesTest extends Context implements SharedPreferences, SharedP
  // Preserva o contrato existente ao adicionar o nono: substitui o ultimo favorito.
  check(Prefs.toggleFav(c,"app7")); check(Prefs.favs(c).size()==8);
  check(!Prefs.favs(c).contains("app3")); check(Prefs.favs(c).contains("app7"));
- System.out.println("Favoritos: capacidade, preservacao, remocao e substituicao OK");
+ System.out.println("Favoritos e preferencia persistente dos graficos OK");
  }
 }''',
 }

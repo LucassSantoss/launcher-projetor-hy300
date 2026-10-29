@@ -109,6 +109,35 @@ final class Prefs {
         sp(c).edit().putBoolean("dark", dark).apply();
     }
 
+    static boolean showHardware(Context c) {
+        return sp(c).getBoolean("mostrar_hardware", true);
+    }
+
+    static void setShowHardware(Context c, boolean show) {
+        sp(c).edit().putBoolean("mostrar_hardware", show).apply();
+    }
+
+    static int downloadKbps(Context c) {
+        return sp(c).getInt("download_kbps", -1);
+    }
+
+    static long downloadAttemptAt(Context c) {
+        return sp(c).getLong("download_tentativa_em", 0);
+    }
+
+    static void setDownloadAttemptAt(Context c, long now) {
+        sp(c).edit().putLong("download_tentativa_em", now).apply();
+    }
+
+    static String downloadCheckedAt(Context c) {
+        return sp(c).getString("download_medido_em", "");
+    }
+
+    static void setDownloadResult(Context c, int kbps, String checkedAt) {
+        sp(c).edit().putInt("download_kbps", kbps)
+                .putString("download_medido_em", checkedAt).apply();
+    }
+
     /** Usa o decodificador OMX no lugar do Codec2 (contorna o erro 5.0 da Netflix nos anuncios). */
     static boolean netflixFix(Context c) {
         return sp(c).getBoolean("netflix_fix", true);

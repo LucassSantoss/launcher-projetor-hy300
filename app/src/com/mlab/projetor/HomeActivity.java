@@ -7,8 +7,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.StatFs;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -30,7 +32,16 @@ public class HomeActivity extends Activity {
     private static final int COLS = 4;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private TextView selKind, selName, info, memory;
+    private TextView selKind, selName, info;
+    private UsageRing temperatureUsage, cpuUsage, ramUsage, storageUsage, internetUsage;
+    private View hardwarePanel;
+    private final HardwareUsage hardware = new HardwareUsage();
+    private final Runnable hardwareTick = new Runnable() {
+        @Override public void run() {
+            updateHardware();
+            handler.postDelayed(this, 3_000);
+        }
+    };
     /** Painel com o QR do controle: aparece so pelo botao "Celular" do Dock. */
     private View qrPanel;
     private ImageView qrImage;
@@ -115,12 +126,16 @@ public class HomeActivity extends Activity {
         loadFavorites();
         loadRecents();
         handler.post(tick);
+        applyHardwareVisibility();
+        refreshInternet(null);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         handler.removeCallbacks(tick);
+        handler.removeCallbacks(hardwareTick);
+        hardware.resetCpu();
         if (qrPanel != null) showQr(false);
     }
 
@@ -322,7 +337,7 @@ public class HomeActivity extends Activity {
 
         recents = Ui.col(this);
         LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, -2);
-        rlp.topMargin = Ui.dp(22);
+        rlp.topMargin = Ui.dp(8);
         rlp.leftMargin = Ui.dp(4);
         c.addView(recents, rlp);
 
@@ -336,10 +351,22 @@ public class HomeActivity extends Activity {
         LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(-1, -2);
         nlp.topMargin = Ui.dp(6);
         c.addView(selName, nlp);
-        memory = Ui.text(this, "", 13, Ui.w500, Ui.MUTED);
-        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(-2, -2);
-        mlp.topMargin = Ui.dp(10);
-        c.addView(memory, mlp);
+        LinearLayout meters = Ui.row(this);
+        temperatureUsage = new UsageRing(this, "Temp.");
+        temperatureUsage.setTemperature(-1);
+        cpuUsage = new UsageRing(this, "CPU");
+        ramUsage = new UsageRing(this, "RAM");
+        storageUsage = new UsageRing(this, "Espaço");
+        internetUsage = new UsageRing(this, "Internet");
+        internetUsage.setSpeed(Prefs.downloadKbps(this), Prefs.downloadCheckedAt(this));
+        for (UsageRing ring : new UsageRing[]{temperatureUsage, cpuUsage, ramUsage, storageUsage, internetUsage}) {
+            meters.addView(ring, new LinearLayout.LayoutParams(0, Ui.dp(66), 1f));
+        }
+        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(-1, -2);
+        mlp.topMargin = Ui.dp(30);
+        c.addView(meters, mlp);
+        hardwarePanel = meters;
+        hardwarePanel.setVisibility(Prefs.showHardware(this) ? View.VISIBLE : View.GONE);
         return c;
     }
 
@@ -587,14 +614,21 @@ public class HomeActivity extends Activity {
     }
 
     private void settingsMenu() {
-        String[] items = {"Ajustes do Android", "Procurar atualização", "Gerar novo PIN do controle", "Voltar à tela original e remover o app"};
+        String hardwareAction = Prefs.showHardware(this)
+                ? "Ocultar temperatura, CPU, RAM, espaço e internet" : "Mostrar temperatura, CPU, RAM, espaço e internet";
+        String[] items = {"Ajustes do Android", hardwareAction, "Testar velocidade da internet", "Procurar atualização", "Gerar novo PIN do controle", "Voltar à tela original e remover o app"};
         dialog().setTitle("Ajustes").setItems(items, (dlg, which) -> {
             if (which == 0) {
                 Intent tv = comp("com.android.tv.settings", "com.android.tv.settings.MainSettings");
                 open(available(tv) ? tv : new Intent(Settings.ACTION_SETTINGS));
             } else if (which == 1) {
-                procurarAtualizacao();
+                Prefs.setShowHardware(this, !Prefs.showHardware(this));
+                applyHardwareVisibility();
             } else if (which == 2) {
+                testInternet();
+            } else if (which == 3) {
+                procurarAtualizacao();
+            } else if (which == 4) {
                 dialog().setTitle("Gerar novo PIN?")
                         .setMessage("Os celulares conectados e os atalhos da Siri vão precisar do PIN novo.")
                         .setPositiveButton("Gerar", (x, y) -> App.inst.server.regeneratePin())
@@ -628,9 +662,66 @@ public class HomeActivity extends Activity {
         String pin = Prefs.pin(this);
         info.setText("Controle no celular  " + ip + ":" + ControlService.PORT + "  ·  PIN " + pin);
         updateQr(ip, pin);
+    }
+
+    private void updateHardware() {
+        temperatureUsage.setTemperature(Temperature.readHighest());
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
         am.getMemoryInfo(mi);
-        memory.setText("Memória livre " + (mi.availMem / (1024 * 1024)) + " MB");
+        cpuUsage.setUsage(hardware.readCpu());
+        ramUsage.setUsage(HardwareUsage.percent(mi.availMem, mi.totalMem));
+        int storagePercent = -1;
+        try {
+            StatFs storage = new StatFs(Environment.getDataDirectory().getAbsolutePath());
+            storagePercent = HardwareUsage.percent(storage.getAvailableBytes(), storage.getTotalBytes());
+        } catch (IllegalArgumentException e) {
+            android.util.Log.w("Projetor", "Armazenamento indisponível", e);
+        }
+        storageUsage.setUsage(storagePercent);
+    }
+
+    private void applyHardwareVisibility() {
+        handler.removeCallbacks(hardwareTick);
+        hardware.resetCpu();
+        boolean show = Prefs.showHardware(this);
+        hardwarePanel.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (show) {
+            cpuUsage.setUsage(-1);
+            handler.post(hardwareTick);
+            App.inst.testInternet(false);
+        } else {
+            App.inst.cancelInternetTest();
+        }
+    }
+
+    private void testInternet() {
+        if (!Prefs.showHardware(this)) {
+            App.inst.controller.hud.message("Mostre os gráficos para testar a internet.");
+            return;
+        }
+        if (App.inst.testingInternet) {
+            App.inst.controller.hud.message("Teste de internet em andamento…");
+            return;
+        }
+        String last = Prefs.downloadKbps(this) < 0 ? "Nenhum teste realizado."
+                : "Último teste: " + UsageRing.speedText(Prefs.downloadKbps(this)) + " Mbps em "
+                        + Prefs.downloadCheckedAt(this) + ".";
+        dialog().setTitle("Testar velocidade da internet")
+                .setMessage(last + "\n\nO teste estima o download de 20MB pela Cloudflare. "
+                        + "Pode afetar vídeos em reprodução.")
+                .setPositiveButton("Testar", (d, w) -> App.inst.testInternet(true))
+                .setNegativeButton("Cancelar", null).show();
+    }
+
+    static void refreshInternet(String message) {
+        HomeActivity h = current;
+        if (h == null || h.isDestroyed() || h.isFinishing()) return;
+        h.runOnUiThread(() -> {
+            if (App.inst.testingInternet) h.internetUsage.setLoading();
+            else h.internetUsage.setSpeed(Prefs.downloadKbps(h), Prefs.downloadCheckedAt(h));
+            if (message != null && h.hasWindowFocus()) h.dialog().setTitle("Velocidade da internet")
+                    .setMessage(message).setPositiveButton("OK", null).show();
+        });
     }
 }
