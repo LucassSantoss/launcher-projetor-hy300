@@ -461,7 +461,7 @@ public class HomeActivity extends Activity {
         return t;
     }
 
-    // ---- Dock (estilo macOS) ----
+    // ---- Dock (estilo macOS, adaptativo por chipset) ----
 
     private View dock() {
         LinearLayout d = Ui.row(this);
@@ -469,20 +469,39 @@ public class HomeActivity extends Activity {
         d.setElevation(Ui.dp(6));
         d.setPadding(Ui.dp(10), 0, Ui.dp(10), 0);
         d.setClipChildren(false);
-        dockItem(d, "Keystone", R.drawable.ic_keystone,
-                comp("com.telanda.keystone", "com.telanda.keystone.MainActivity"));
-        dockItem(d, "Imagem", R.drawable.ic_image,
-                comp("com.gls.Gsettings", "com.gls.Gsettings.MainActivity"));
-        dockItem(d, "HDMI", R.drawable.ic_hdmi,
-                comp("com.softwinner.awsource", "com.softwinner.awsource.MainActivity"));
+
+        // Detecta hardware e carrega intents compatíveis
+        Hardware.Chipset chipset = Hardware.detectChipset();
+
+        // Keystone: tenta pacotes específicos do chipset
+        Intent keystoneIntent = Hardware.findAvailable(this, Hardware.getKeystoneIntents(chipset));
+        if (keystoneIntent != null) {
+            dockItem(d, "Keystone", R.drawable.ic_keystone, keystoneIntent);
+        }
+
+        // Imagem/Display: tenta pacotes específicos do chipset
+        Intent imageIntent = Hardware.findAvailable(this, Hardware.getImageAdjustmentIntents(chipset));
+        if (imageIntent != null) {
+            dockItem(d, "Imagem", R.drawable.ic_image, imageIntent);
+        }
+
+        // HDMI/Input: tenta pacotes específicos do chipset
+        Intent hdmiIntent = Hardware.findAvailable(this, Hardware.getHdmiIntents(chipset));
+        if (hdmiIntent != null) {
+            dockItem(d, "HDMI", R.drawable.ic_hdmi, hdmiIntent);
+        }
+
+        // Itens universais (sempre disponíveis)
         dockItem(d, "Wi‑Fi", R.drawable.ic_wifi, new Intent(Settings.ACTION_WIFI_SETTINGS));
         dockItem(d, "Bluetooth", R.drawable.ic_bt, new Intent(Settings.ACTION_BLUETOOTH_SETTINGS));
         dockItem(d, "Ajustes", R.drawable.ic_settings, null).setOnClickListener(v -> settingsMenu());
+
         View sep = new View(this);
         sep.setBackgroundColor(Ui.dark ? 0x33FFFFFF : 0x221D1D1F);
         LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(Ui.dp(1), Ui.dp(52));
         slp.leftMargin = slp.rightMargin = Ui.dp(8);
         d.addView(sep, slp);
+
         dockItem(d, "Apps", R.drawable.ic_apps, new Intent(this, AppsActivity.class));
         dockItem(d, "Celular", R.drawable.ic_phone, null).setOnClickListener(v -> toggleQr());
         View theme = dockItem(d, Ui.dark ? "Claro" : "Escuro", Ui.dark ? R.drawable.ic_sun : R.drawable.ic_moon, null);
