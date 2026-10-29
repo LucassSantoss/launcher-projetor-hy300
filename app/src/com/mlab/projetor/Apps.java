@@ -3,6 +3,7 @@ package com.mlab.projetor;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
@@ -51,6 +52,25 @@ final class Apps {
             if (launchIntent(c, pkg) == null) return null;
             return new Entry(pkg, pm.getApplicationLabel(ai).toString(), pm.getApplicationIcon(ai));
         } catch (PackageManager.NameNotFoundException e) {
+            return null;
+        }
+    }
+
+    /** Arte horizontal do proprio app; null permite usar o icone como alternativa. */
+    static Drawable banner(Context c, String pkg) {
+        if (TV_PKG.equals(pkg)) return null;
+        PackageManager pm = c.getPackageManager();
+        try {
+            Intent launch = launchIntent(c, pkg);
+            ActivityInfo activity = launch == null ? null : launch.resolveActivityInfo(pm, 0);
+            Drawable banner = activity == null ? null : activity.loadBanner(pm);
+            if (banner != null) return banner;
+        } catch (RuntimeException ignored) {
+            // Um recurso da atividade com defeito nao impede tentar a arte da aplicacao.
+        }
+        try {
+            return pm.getApplicationBanner(pkg);
+        } catch (PackageManager.NameNotFoundException | RuntimeException ignored) {
             return null;
         }
     }
