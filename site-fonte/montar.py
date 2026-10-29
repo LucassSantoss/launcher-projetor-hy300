@@ -6,7 +6,7 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(os.path.dirname(HERE), 'site')
-VERSAO = '4.5.3'
+VERSAO = '4.6.0'
 
 
 def read(name):
