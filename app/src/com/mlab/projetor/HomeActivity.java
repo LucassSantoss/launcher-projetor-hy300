@@ -6,6 +6,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -26,7 +27,7 @@ import java.util.List;
 
 /**
  * Tela inicial inspirada no iPhone/macOS: relogio grande da tela de bloqueio, favoritos
- * como cartoes de cor (paleta) e um Dock translucido com os ajustes do projetor.
+ * como artes horizontais dos apps e um Dock translucido com os ajustes do projetor.
  */
 public class HomeActivity extends Activity {
     private static final int COLS = 4;
@@ -160,6 +161,12 @@ public class HomeActivity extends Activity {
         main.addView(clockColumn(), new LinearLayout.LayoutParams(Ui.dp(330), -1));
         grid = Ui.col(this);
         grid.setClipChildren(false);
+        grid.setClipToPadding(false);
+        grid.setGravity(Gravity.CENTER_VERTICAL);
+        grid.setPadding(Ui.dp(8), Ui.dp(8), Ui.dp(8), Ui.dp(8));
+        grid.addOnLayoutChangeListener((v, l, t, r, b, oldL, oldT, oldR, oldB) -> {
+            if (r - l != oldR - oldL) sizeFavoriteRows();
+        });
         LinearLayout.LayoutParams glp = new LinearLayout.LayoutParams(0, -1, 1f);
         glp.leftMargin = Ui.dp(36);
         main.addView(grid, glp);
@@ -411,7 +418,7 @@ public class HomeActivity extends Activity {
         }
     }
 
-    // ---- Favoritos: cartoes de cor, 4 colunas x 2 linhas ----
+    // ---- Favoritos: artes horizontais, 4 colunas x 2 linhas ----
 
     private void loadFavorites() {
         grid.removeAllViews();
@@ -425,7 +432,7 @@ public class HomeActivity extends Activity {
                 int i = r * COLS + col;
                 View v;
                 if (i < favs.size()) {
-                    v = tile(favs.get(i), i);
+                    v = tile(favs.get(i));
                     if (first == null) first = v;
                 } else if (!addShown) {
                     v = addTile();
@@ -442,10 +449,11 @@ public class HomeActivity extends Activity {
                     v.setNextFocusDownId(target.getId());
                 }
             }
-            LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, 0, 1f);
-            if (r > 0) rlp.topMargin = Ui.dp(16);
+            LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, Ui.dp(60));
+            if (r > 0) rlp.topMargin = Ui.dp(20);
             grid.addView(row, rlp);
         }
+        sizeFavoriteRows();
         if (favs.isEmpty()) {
             selKind.setText("Bem-vindo");
             selName.setText("Escolha seus apps");
@@ -453,43 +461,41 @@ public class HomeActivity extends Activity {
         if (first != null && getCurrentFocus() == null) first.requestFocus();
     }
 
-    private View tile(final Apps.Entry a, int index) {
-        final int color = Ui.appColor(a.pkg, a.icon, index);
-        // No escuro o vidro escurece a cor, entao o texto e sempre branco.
-        final int fg = Ui.dark ? 0xFFFFFFFF : Ui.onColor(color);
-        LinearLayout t = Ui.col(this);
-        t.setContentDescription(a.label);
-        t.setPadding(Ui.dp(18), Ui.dp(18), Ui.dp(18), Ui.dp(18));
-        GradientDrawable bg = Ui.round(color, 28);
-        t.setBackground(bg);
-
-        FrameLayout box = new FrameLayout(this);
-        box.setBackground(Ui.round(0xFFFFFFFF, 16));
-        box.setElevation(Ui.dp(1));
-        if (a.icon != null) {
-            ImageView iv = new ImageView(this);
-            iv.setImageDrawable(a.icon);
-            box.addView(iv, new FrameLayout.LayoutParams(Ui.dp(42), Ui.dp(42), Gravity.CENTER));
+    private void sizeFavoriteRows() {
+        int width = grid.getWidth() - grid.getPaddingLeft() - grid.getPaddingRight();
+        if (width <= Ui.dp(16) * (COLS - 1)) return;
+        int height = Math.round((width - Ui.dp(16) * (COLS - 1)) / (float) COLS * 9f / 16f);
+        for (int i = 0; i < grid.getChildCount(); i++) {
+            View row = grid.getChildAt(i);
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) row.getLayoutParams();
+            if (lp.height == height) continue;
+            lp.height = height;
+            row.setLayoutParams(lp);
         }
-        t.addView(box, new LinearLayout.LayoutParams(Ui.dp(58), Ui.dp(58)));
-        t.addView(Ui.vspace(this, 1));
+    }
 
-        TextView name = Ui.text(this, a.label, 19, Ui.w700, fg);
-        name.setMaxLines(2);
-        name.setEllipsize(TextUtils.TruncateAt.END);
-        name.setLetterSpacing(-0.01f);
-        t.addView(name, new LinearLayout.LayoutParams(-1, -2));
-        TextView kind = Ui.text(this, Apps.kind(a.pkg), 13, Ui.w500, fg);
-        kind.setAlpha(0.78f);
-        LinearLayout.LayoutParams klp = new LinearLayout.LayoutParams(-1, -2);
-        klp.topMargin = Ui.dp(5);
-        t.addView(kind, klp);
-
-        Ui.focusable(t, bg, 1.06f, () -> {
+    private View tile(final Apps.Entry a) {
+        FrameLayout t = new FrameLayout(this);
+        t.setContentDescription(a.label);
+        t.setBackground(Ui.round(0xFF15161C, 12));
+        t.setClipToOutline(true);
+        Drawable banner = Apps.banner(this, a.pkg);
+        ImageView art = new ImageView(this);
+        if (banner != null) {
+            art.setImageDrawable(banner);
+            art.setScaleType(ImageView.ScaleType.FIT_XY);
+        } else {
+            art.setImageDrawable(a.icon);
+            art.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            art.setPadding(Ui.dp(12), Ui.dp(12), Ui.dp(12), Ui.dp(12));
+        }
+        art.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        t.addView(art, new FrameLayout.LayoutParams(-1, -1));
+        Ui.focusableIcon(t, () -> {
             selKind.setText(Apps.kind(a.pkg));
             selName.setText(a.label);
             App.inst.controller.onScreen(getPackageName(), a.label);
-        }, color);
+        });
         t.setOnClickListener(v -> open(Apps.launchIntent(this, a.pkg)));
         t.setOnLongClickListener(v -> {
             Prefs.toggleFav(this, a.pkg);
@@ -503,15 +509,11 @@ public class HomeActivity extends Activity {
     private View addTile() {
         LinearLayout t = Ui.col(this);
         t.setGravity(Gravity.CENTER);
-        GradientDrawable bg = Ui.glass(28);
+        GradientDrawable bg = Ui.glass(12);
         t.setBackground(bg);
         t.addView(Ui.icon(this, R.drawable.ic_plus, 30, Ui.MUTED));
         t.setContentDescription("Adicionar app");
-        TextView l = Ui.text(this, "Adicionar", 14, Ui.w600, Ui.MUTED);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, -2);
-        lp.topMargin = Ui.dp(10);
-        t.addView(l, lp);
-        Ui.focusable(t, bg, 1.06f, () -> {
+        Ui.focusableIcon(t, () -> {
             selKind.setText("Favoritos");
             selName.setText("Adicionar app");
         });
