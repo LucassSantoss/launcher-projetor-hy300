@@ -129,9 +129,11 @@ echo "senha: SUA_SENHA" > ~/dev/android/keys/instalador-senha.txt
 
 ## Iniciar o projetor direto no app
 
+> **Esta seção é um passo manual e opcional, feito por `adb` em cada aparelho.** O app **não** desativa tela inicial nenhuma: instalar o APK apenas o torna a tela inicial padrão (via `RoleManager`), e a de fábrica continua instalada e ativa. Num aparelho em que estes comandos não forem rodados, não existe o risco de ficar sem tela inicial descrito mais abaixo — o preço é que o boot ainda cai na tela de fábrica.
+
 Definir o app como tela inicial padrão **não basta** em alguns firmwares. O sistema escolhe a tela inicial ainda na fase de boot travado (antes do `LOCKED_BOOT_COMPLETED`), quando só apps `directBootAware` contam. Nesse instante o app ainda não existe, e o firmware abre a tela inicial de fábrica, que fica na frente. O `BOOT_COMPLETED` chega uns 6 segundos depois, tarde demais.
 
-A forma que resolve é deixar um único launcher disponível, desativando o de fábrica. No projetor testado (um `t950s_be311`, Amlogic, Android 13) ele é o `com.htc.htclauncherhighenglishd08`. Para descobrir o do seu aparelho:
+A forma que resolve é deixar um único launcher disponível, desativando o de fábrica. No projetor testado (um `t950s_be311`, Amlogic, Android 13) ele é o `com.htc.htclauncherhighenglishd08`. **Em outro aparelho o nome quase certamente é outro**, então descubra o do seu antes de desativar qualquer coisa:
 
 ```bash
 adb shell cmd package query-activities --brief -a android.intent.action.MAIN -c android.intent.category.HOME
