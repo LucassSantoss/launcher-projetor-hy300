@@ -77,6 +77,9 @@ final class Controller {
 
     private final Context ctx;
     private final Instrumentation inst = new Instrumentation();
+    private Object inputManager;
+    private java.lang.reflect.Method injectInput;
+    private boolean injectFailed;
     private final ExecutorService queue = Executors.newSingleThreadExecutor();
     private final Handler main = new Handler(Looper.getMainLooper());
     private final AudioManager audio;
@@ -222,9 +225,14 @@ final class Controller {
                 || code == KeyEvent.KEYCODE_DPAD_CENTER;
         int src = dpad ? InputDevice.SOURCE_DPAD : InputDevice.SOURCE_KEYBOARD;
         long down = SystemClock.uptimeMillis();
-        inst.sendKeySync(new KeyEvent(down, down, KeyEvent.ACTION_DOWN, code, 0, 0, dev, 0, KeyEvent.FLAG_FROM_SYSTEM, src));
-        inst.sendKeySync(new KeyEvent(down, SystemClock.uptimeMillis(), KeyEvent.ACTION_UP, code, 0, 0, dev, 0,
-                KeyEvent.FLAG_FROM_SYSTEM, src));
+        // Mesmo motivo do touch(): dentro de um app o sendKeySync segura o DOWN e o UP
+        // sai tarde, virando tecla repetida. A injecao assincrona mantem o toque curto.
+        sendKey(new KeyEvent(down, down, KeyEvent.ACTION_DOWN, code, 0, 0, dev, 0, KeyEvent.FLAG_FROM_SYSTEM, src));
+        sendKey(new KeyEvent(down, down + 40, KeyEvent.ACTION_UP, code, 0, 0, dev, 0, KeyEvent.FLAG_FROM_SYSTEM, src));
+    }
+
+    private void sendKey(KeyEvent e) {
+        if (!injectAsync(e)) inst.sendKeySync(e);
     }
 
     // Volume vindo do celular: sem a barra do sistema (FLAG_SHOW_UI); quem mostra e o nosso aviso.
@@ -325,11 +333,14 @@ final class Controller {
         final float x = cx, y = cy;
         main.removeCallbacks(hideCursor);
         main.postDelayed(hideCursor, 8000);
+        final int duracao = longPress ? 700 : 40;
         queue.execute(() -> {
             long t = SystemClock.uptimeMillis();
             touch(t, t, MotionEvent.ACTION_DOWN, x, y);
-            SystemClock.sleep(longPress ? 700 : 40);
-            touch(t, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, x, y);
+            SystemClock.sleep(duracao);
+            // Instante fixo (t + duracao), e nao o relogio: se a injecao atrasar,
+            // o app ainda ve um toque curto em vez de um toque longo.
+            touch(t, t + duracao, MotionEvent.ACTION_UP, x, y);
         });
     }
 
@@ -356,11 +367,36 @@ final class Controller {
         MotionEvent e = MotionEvent.obtain(down, when, action, x, y, 0);
         e.setSource(InputDevice.SOURCE_TOUCHSCREEN);
         try {
-            inst.sendPointerSync(e);
+            // sendPointerSync espera o app de destino terminar de tratar o evento.
+            // Dentro do launcher isso e imediato, mas num app pesado (Netflix, YouTube)
+            // o DOWN segura a thread e o UP so sai muito depois: vira toque longo.
+            // Por isso injetamos sem esperar, que mantem o intervalo real entre os dois.
+            if (!injectAsync(e)) inst.sendPointerSync(e);
         } catch (Throwable ex) {
             Log.w(TAG, "falha ao injetar toque", ex);
         } finally {
             e.recycle();
+        }
+    }
+
+    /**
+     * InputManager.injectInputEvent no modo assincrono (0 = INJECT_INPUT_EVENT_MODE_ASYNC),
+     * disponivel so por reflexao. Exige INJECT_EVENTS, que o app tem por ser de sistema.
+     * Devolve false se nao der (ai o chamador usa a Instrumentation).
+     */
+    private boolean injectAsync(android.view.InputEvent e) {
+        if (injectFailed) return false;
+        try {
+            if (injectInput == null) {
+                inputManager = ctx.getSystemService(Context.INPUT_SERVICE);
+                injectInput = inputManager.getClass()
+                        .getMethod("injectInputEvent", android.view.InputEvent.class, int.class);
+            }
+            return Boolean.TRUE.equals(injectInput.invoke(inputManager, e, 0));
+        } catch (Throwable ex) {
+            injectFailed = true;
+            Log.w(TAG, "injecao assincrona indisponivel; usando Instrumentation", ex);
+            return false;
         }
     }
 
