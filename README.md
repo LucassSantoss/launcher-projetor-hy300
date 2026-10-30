@@ -24,11 +24,21 @@ O passo a passo de cada um está no site.
 
 | Pasta | O que é |
 |---|---|
-| `app/` | App Projetor (`com.mlab.projetor`). Compila com `bash build.sh` (aapt2, javac, d8, sem Gradle) |
+| `app/` | App Projetor (`com.mlab.projetor`). Compila com `bash build.sh` no Windows ou `bash build-macos.sh` no macOS (aapt2, javac, d8, sem Gradle) |
 | `instalador/` | Instalador para celular Android (`com.mlab.instalador`): cliente ADB por Wi‑Fi em Java puro |
 | `kit/` | Instalar e desinstalar pelo Windows (`instalar.bat`, `desinstalar.bat`) |
 | `site/` | Site publicado (Cloudflare Pages). Fonte em `site-fonte/` |
 | `scripts/` | `sincronizar.sh` copia as pastas de trabalho para cá |
+
+### Compilar no macOS
+
+Os `build-macos.sh` (em `app/`, `app/overlay/` e `instalador/`) usam as mesmas versões do Windows: JDK 17, build-tools 34.0.0 e android-30. Por padrão procuram tudo em `~/dev/android` (`jdk17/`, `sdk/` e `keys/`, a mesma estrutura de `C:\dev\android`). Para usar outra pasta, defina `ANDROID_DEV`:
+
+```bash
+ANDROID_DEV=/caminho/android bash app/build-macos.sh
+```
+
+Em Macs com Apple Silicon, o `aapt2` do build-tools 34 é x86_64 e precisa do Rosetta (`softwareupdate --install-rosetta`).
 
 ## Segurança
 

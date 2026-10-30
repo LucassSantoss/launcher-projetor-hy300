@@ -407,7 +407,7 @@ input[type=file]{display:none}
 
   // ---- Joystick: arraste o OK. Navegar = setas (mais longe, mais rapido); Cursor = move a seta ----
   var joy = $('#joy'), knob = $('#knob'), R = 80, DEAD = 24, mode = 'nav';
-  var jo = null, jx = 0, jy = 0, jlen = 0, jMoved = false, jAt = 0, jDir = null, jRep = 0, jRaf = 0, jHold = 0;
+  var jo = null, jx = 0, jy = 0, jlen = 0, jMoved = false, jAt = 0, jDir = null, jRep = 0, jRaf = 0;
   var arrows = { up: joy.querySelector('.au'), down: joy.querySelector('.ad'), left: joy.querySelector('.al'), right: joy.querySelector('.ar') };
   var CURSOR_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 3l13 8-5.6 1.5L10.5 19z"/></svg>';
   var OK_SVG = knob.innerHTML;
@@ -455,7 +455,6 @@ input[type=file]{display:none}
     knob.classList.add('drag');
     if (mode === 'cur') {
       if (!jRaf) jRaf = requestAnimationFrame(cursorLoop);
-      jHold = setTimeout(function () { if (!jMoved) { send('lc'); jMoved = true; } }, 650);
     }
   }, { passive: false });
   joy.addEventListener('touchmove', function (e) {
@@ -476,7 +475,7 @@ input[type=file]{display:none}
   function joyEnd(e) {
     if (!jo) return;
     if (e) e.preventDefault();
-    clearTimeout(jRep); clearTimeout(jHold); lit(null); if (mode === 'cur') joyStop();
+    clearTimeout(jRep); lit(null); if (mode === 'cur') joyStop();
     knob.classList.remove('drag'); knob.style.transform = '';
     if (!jMoved && Date.now() - jAt < 450) {
       if (mode === 'nav') key('ok'); else send('c', function () { api('click'); });
