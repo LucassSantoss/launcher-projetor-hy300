@@ -32,24 +32,25 @@ O passo a passo de cada um está no site.
 
 ### Compilar no macOS
 
-Os `build-macos.sh` (em `app/`, `app/overlay/` e `instalador/`) usam as mesmas versões do Windows: JDK 17, build-tools 34.0.0 e android-30. Tudo fica em `~/dev/android`, na mesma estrutura de `C:\dev\android`:
+Os `build-macos.sh` (em `app/`, `app/overlay/` e `instalador/`) usam as mesmas versões do Windows: JDK 17, build-tools 34.0.0 e android-30. O `scripts/ambiente-macos.sh` procura cada coisa sozinho:
 
-```
-~/dev/android/
-├── jdk17/   (opcional: se faltar, usa o JDK 17 instalado no sistema)
-├── sdk/     build-tools/34.0.0 e platforms/android-30
-└── keys/    platform.pk8 e platform.x509.pem
-```
+| O quê | Onde procura |
+|---|---|
+| JDK 17 | `JAVA_HOME`, `~/dev/android/jdk17`, o `openjdk@17` do Homebrew e as JVMs do sistema |
+| SDK | `ANDROID_HOME`, `ANDROID_SDK_ROOT`, `~/dev/android/sdk` e `~/Library/Android/sdk` (Android Studio) |
+| Chaves | sempre `~/dev/android/keys` |
 
-Para usar outra pasta, defina `ANDROID_DEV`: `ANDROID_DEV=/caminho/android bash app/build-macos.sh`.
+Para forçar outro caminho, defina `JAVA_HOME`, `ANDROID_HOME` ou `ANDROID_DEV` (que move a pasta das chaves): `ANDROID_DEV=/caminho bash app/build-macos.sh`.
 
-**1. JDK 17** (precisa ser a 17). Com o Homebrew:
+**1. JDK 17** (precisa ser a 17: o `javac` roda com `-source 8` e o `d8` do build-tools 34 não acompanha versões mais novas). Com o Homebrew:
 
 ```bash
-brew install --cask temurin@17
+brew install openjdk@17
 ```
 
-**2. SDK do Android** (build-tools 34.0.0 e android-30):
+Não é preciso ligá-la ao sistema: o script acha a do Homebrew mesmo que o `java -version` aponte outra.
+
+**2. SDK do Android** (build-tools 34.0.0 e android-30). Se você já tem o Android Studio com essas versões, pule este passo. Senão:
 
 ```bash
 brew install --cask android-commandlinetools
