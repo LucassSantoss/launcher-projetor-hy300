@@ -42,9 +42,14 @@ final class Sistema {
         return "android".equals(p) ? null : p;
     }
 
-    /** Outra tela inicial instalada (a do fabricante), sem a do app e sem a de espera do Android. */
+    /**
+     * Outra tela inicial instalada (a do fabricante), sem a do app e sem a de espera do Android.
+     * Inclui as desativadas: para o app ser a unica tela inicial, a do fabricante pode ter sido
+     * desligada, e e justamente ela que precisamos devolver ao remover o app.
+     */
     private static String otherHome(Context c) {
-        List<ResolveInfo> l = c.getPackageManager().queryIntentActivities(homeIntent(), 0);
+        List<ResolveInfo> l = c.getPackageManager().queryIntentActivities(
+                homeIntent(), PackageManager.MATCH_DISABLED_COMPONENTS);
         for (ResolveInfo ri : l) {
             String p = ri.activityInfo.packageName;
             if (!p.equals(c.getPackageName()) && !p.equals("android") && !p.equals("com.android.settings")
@@ -103,21 +108,47 @@ final class Sistema {
     static void restoreAndUninstall(final Context c) {
         String orig = Prefs.originalHome(c);
         if (orig == null || !installed(c, orig)) orig = otherHome(c);
-        final String home = orig;
+        // Para o app ficar como unica tela inicial, a do fabricante pode ter sido desativada
+        // (pm disable-user). Sem religar, ela nao pode virar a padrao e o aparelho ficaria
+        // sem nenhuma tela inicial depois que o app sair.
+        final String home = orig != null && enableHome(c, orig) ? orig : null;
+        if (home == null) {
+            Log.w(TAG, "nenhuma tela inicial para devolver; o app nao sera removido");
+            App.inst.controller.hud.message("Sem outra tela inicial: remova pelos Ajustes do Android");
+            return;
+        }
         restoreSystem(c);
         Runnable rest = () -> {
-            if (home != null) {
-                Intent i = homeIntent().setPackage(home).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                try {
-                    c.startActivity(i);
-                } catch (Exception e) {
-                    Log.w(TAG, "tela inicial original nao abriu", e);
-                }
+            Intent i = homeIntent().setPackage(home).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                c.startActivity(i);
+            } catch (Exception e) {
+                Log.w(TAG, "tela inicial original nao abriu", e);
             }
             new Handler(Looper.getMainLooper()).postDelayed(() -> uninstallSelf(c), 1500);
         };
-        if (home != null) setHome(c, home, ok -> rest.run());
-        else rest.run();
+        setHome(c, home, ok -> rest.run());
+    }
+
+    /**
+     * Garante que a tela inicial do fabricante esteja ligada antes de devolve-la.
+     * Devolve false se ela nao existir ou se nao der para religar: ai e melhor manter o app
+     * do que deixar o aparelho sem tela inicial nenhuma.
+     */
+    private static boolean enableHome(Context c, String pkg) {
+        if (!installed(c, pkg)) return false;
+        PackageManager pm = c.getPackageManager();
+        try {
+            if (pm.getApplicationEnabledSetting(pkg) != PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER
+                    && pm.getApplicationInfo(pkg, PackageManager.MATCH_DISABLED_COMPONENTS).enabled) {
+                return true;
+            }
+            pm.setApplicationEnabledSetting(pkg, PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, 0);
+            return pm.getApplicationInfo(pkg, PackageManager.MATCH_DISABLED_COMPONENTS).enabled;
+        } catch (Exception e) {
+            Log.w(TAG, "nao foi possivel religar a tela inicial " + pkg, e);
+            return false;
+        }
     }
 
     private static boolean installed(Context c, String pkg) {
