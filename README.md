@@ -127,6 +127,44 @@ keytool -genkeypair -keystore ~/dev/android/keys/instalador.jks -alias instalado
 echo "senha: SUA_SENHA" > ~/dev/android/keys/instalador-senha.txt
 ```
 
+## Iniciar o projetor direto no app
+
+Definir o app como tela inicial padrão **não basta** em alguns firmwares. O sistema escolhe a tela inicial ainda na fase de boot travado (antes do `LOCKED_BOOT_COMPLETED`), quando só apps `directBootAware` contam. Nesse instante o app ainda não existe, e o firmware abre a tela inicial de fábrica, que fica na frente. O `BOOT_COMPLETED` chega uns 6 segundos depois, tarde demais.
+
+A forma que resolve é deixar um único launcher disponível, desativando o de fábrica. No projetor testado (um `t950s_be311`, Amlogic, Android 13) ele é o `com.htc.htclauncherhighenglishd08`. Para descobrir o do seu aparelho:
+
+```bash
+adb shell cmd package query-activities --brief -a android.intent.action.MAIN -c android.intent.category.HOME
+```
+
+Desative o de fábrica (troque pelo pacote que apareceu):
+
+```bash
+adb shell pm disable-user --user 0 com.htc.htclauncherhighenglishd08
+```
+
+### Como voltar atrás
+
+`disable-user` **não apaga nada**: o APK continua em `/system/app/` e o pacote segue instalado, só fica escondido da lista de telas iniciais. Para reativar:
+
+```bash
+adb shell pm enable com.htc.htclauncherhighenglishd08
+```
+
+Vale anotar esse comando fora do projetor. Se o aparelho ficar sem nenhuma tela inicial, a tela fica vazia, mas o Android continua rodando e o adb não depende do launcher. Nos firmwares de desenvolvimento (`ro.debuggable=1`) o adb por rede já vem ligado na porta 5555 e sobrevive a reinicializações:
+
+```bash
+adb connect IP_DO_PROJETOR:5555 && adb shell pm enable com.htc.htclauncherhighenglishd08
+```
+
+Os Ajustes do Android também abrem sem tela inicial:
+
+```bash
+adb shell am start -n com.android.tv.settings/.MainSettings
+```
+
+O "Voltar à tela original e remover o app" do próprio app religa a tela inicial de fábrica antes de se remover, e se recusa a continuar se não houver nenhuma para devolver.
+
 ## Segurança
 
 - O app roda como **app de sistema**: é assinado com a chave de teste pública do AOSP, a mesma do firmware desses projetores. Em aparelhos com outro firmware, o Android recusa a instalação.
