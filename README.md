@@ -165,6 +165,35 @@ adb shell am start -n com.android.tv.settings/.MainSettings
 
 O "Voltar à tela original e remover o app" do próprio app religa a tela inicial de fábrica antes de se remover, e se recusa a continuar se não houver nenhuma para devolver.
 
+### Atualizar o app depois disso
+
+Com a tela inicial de fábrica desativada, o app passa a ser a **única** do aparelho. Isso muda o que cada comando significa:
+
+| Comando | O que acontece |
+|---|---|
+| `adb install -r Projetor.apk` | Seguro. É o caminho normal para novas versões. |
+| `adb uninstall com.mlab.projetor` | **Deixa o projetor sem nenhuma tela inicial.** |
+
+A atualização por cima preserva tudo: PIN, favoritos e o papel de tela inicial. O app reinicia sozinho pelo `MY_PACKAGE_REPLACED` e o controle do celular volta junto. Se outro app estiver em primeiro plano na hora, ele continua na frente — o Android bloqueia início de activity em segundo plano; basta apertar HOME.
+
+```bash
+adb install -r app/build/Projetor.apk
+```
+
+Duas condições para o `-r` funcionar: a **mesma chave de assinatura** e um `versionCode` **igual ou maior**. Rebaixar a versão é recusado.
+
+Só é preciso desinstalar quando a chave de assinatura muda. Nesse caso, **reative a tela inicial de fábrica antes**, senão o aparelho fica sem nenhuma entre a desinstalação e a instalação:
+
+```bash
+adb shell pm enable com.htc.htclauncherhighenglishd08
+```
+
+```bash
+adb uninstall com.mlab.projetor && adb install app/build/Projetor.apk
+```
+
+Depois, desative de novo se quiser voltar a iniciar direto no app.
+
 ## Segurança
 
 - O app roda como **app de sistema**: é assinado com a chave de teste pública do AOSP, a mesma do firmware desses projetores. Em aparelhos com outro firmware, o Android recusa a instalação.
