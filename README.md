@@ -32,13 +32,75 @@ O passo a passo de cada um está no site.
 
 ### Compilar no macOS
 
-Os `build-macos.sh` (em `app/`, `app/overlay/` e `instalador/`) usam as mesmas versões do Windows: JDK 17, build-tools 34.0.0 e android-30. Por padrão procuram tudo em `~/dev/android` (`jdk17/`, `sdk/` e `keys/`, a mesma estrutura de `C:\dev\android`). Para usar outra pasta, defina `ANDROID_DEV`:
+Os `build-macos.sh` (em `app/`, `app/overlay/` e `instalador/`) usam as mesmas versões do Windows: JDK 17, build-tools 34.0.0 e android-30. Tudo fica em `~/dev/android`, na mesma estrutura de `C:\dev\android`:
 
-```bash
-ANDROID_DEV=/caminho/android bash app/build-macos.sh
+```
+~/dev/android/
+├── jdk17/   (opcional: se faltar, usa o JDK 17 instalado no sistema)
+├── sdk/     build-tools/34.0.0 e platforms/android-30
+└── keys/    platform.pk8 e platform.x509.pem
 ```
 
-Em Macs com Apple Silicon, o `aapt2` do build-tools 34 é x86_64 e precisa do Rosetta (`softwareupdate --install-rosetta`).
+Para usar outra pasta, defina `ANDROID_DEV`: `ANDROID_DEV=/caminho/android bash app/build-macos.sh`.
+
+**1. JDK 17** (precisa ser a 17). Com o Homebrew:
+
+```bash
+brew install --cask temurin@17
+```
+
+**2. SDK do Android** (build-tools 34.0.0 e android-30):
+
+```bash
+brew install --cask android-commandlinetools
+```
+
+```bash
+yes | sdkmanager --sdk_root="$HOME/dev/android/sdk" "build-tools;34.0.0" "platforms;android-30"
+```
+
+Em Macs com Apple Silicon, o `aapt2` do build-tools 34 é x86_64 e precisa do Rosetta: `softwareupdate --install-rosetta`.
+
+**3. Chaves de assinatura.** O `Projetor.apk` e o overlay são assinados com a chave de teste `platform` do AOSP, a mesma do firmware do HY300. Ela é pública, mas não vem neste repositório (o `.gitignore` bloqueia `*.pk8`). Baixe do AOSP oficial (https://android.googlesource.com/platform/build/+/refs/heads/main/target/product/security/) ou do espelho no GitHub:
+
+```bash
+mkdir -p ~/dev/android/keys
+git clone --depth 1 --filter=blob:none --sparse https://github.com/aosp-mirror/platform_build.git /tmp/aosp-build
+```
+
+```bash
+cd /tmp/aosp-build && git sparse-checkout set target/product/security
+```
+
+```bash
+cp target/product/security/platform.pk8 target/product/security/platform.x509.pem ~/dev/android/keys/
+```
+
+Confira a impressão digital do certificado:
+
+```bash
+openssl x509 -in ~/dev/android/keys/platform.x509.pem -noout -fingerprint -sha1
+```
+
+Deve ser `27:19:6E:38:6B:87:5E:76:AD:F7:00:E7:EA:84:E4:C6:EE:E3:3D:FA`. O `build-macos.sh` imprime o SHA-1 do APK no final; se for o mesmo valor, ele foi assinado com essa chave.
+
+**4. Compilar:**
+
+```bash
+bash app/build-macos.sh
+```
+
+O APK sai em `app/build/Projetor.apk`. Para instalar, desinstale antes qualquer versão anterior sem `sharedUserId`: o Android recusa a troca (`INSTALL_FAILED_SHARED_USER_INCOMPATIBLE`).
+
+O `instalador/build-macos.sh` usa uma chave **própria** (`keys/instalador.jks` e `keys/instalador-senha.txt`, com uma linha `senha: ...`). Ela não é a do AOSP e nunca deve ir para o repositório. Para criar uma:
+
+```bash
+keytool -genkeypair -keystore ~/dev/android/keys/instalador.jks -alias instalador -keyalg RSA -keysize 2048 -validity 10000
+```
+
+```bash
+echo "senha: SUA_SENHA" > ~/dev/android/keys/instalador-senha.txt
+```
 
 ## Segurança
 
