@@ -92,7 +92,31 @@ bash app/build-macos.sh
 
 O APK sai em `app/build/Projetor.apk`. Para instalar, desinstale antes qualquer versão anterior sem `sharedUserId`: o Android recusa a troca (`INSTALL_FAILED_SHARED_USER_INCOMPATIBLE`).
 
-O `instalador/build-macos.sh` usa uma chave **própria** (`keys/instalador.jks` e `keys/instalador-senha.txt`, com uma linha `senha: ...`). Ela não é a do AOSP e nunca deve ir para o repositório. Para criar uma:
+**5. Instalar no projetor pelo ADB.** O `adb` vem no `platform-tools`, que não faz parte do build-tools:
+
+```bash
+brew install --cask android-platform-tools
+```
+
+Com a depuração USB ou por rede ativada no projetor, conecte (pule este passo se for por USB):
+
+```bash
+adb connect IP_DO_PROJETOR:5555
+```
+
+Desinstale a versão anterior (necessário por causa do `sharedUserId`, ver passo 4) e instale a nova:
+
+```bash
+adb uninstall com.mlab.projetor
+```
+
+```bash
+adb install app/build/Projetor.apk
+```
+
+Se aparecer `INSTALL_FAILED_SHARED_USER_INCOMPATIBLE`, a versão antiga ainda está instalada. Se o erro for de assinatura, o firmware do aparelho não usa a chave `platform` do AOSP.
+
+Só para quem vai compilar o app de celular: o `instalador/build-macos.sh` usa uma chave **própria** (`keys/instalador.jks` e `keys/instalador-senha.txt`, com uma linha `senha: ...`). Ela não é a do AOSP e nunca deve ir para o repositório. Para criar uma:
 
 ```bash
 keytool -genkeypair -keystore ~/dev/android/keys/instalador.jks -alias instalador -keyalg RSA -keysize 2048 -validity 10000
