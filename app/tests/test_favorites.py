@@ -71,6 +71,18 @@ public class FavoritesTest extends Context implements SharedPreferences, SharedP
  // Preserva o contrato existente ao adicionar o nono: substitui o ultimo favorito.
  check(Prefs.toggleFav(c,"app7")); check(Prefs.favs(c).size()==8);
  check(!Prefs.favs(c).contains("app3")); check(Prefs.favs(c).contains("app7"));
+ // Mover: muda so a posicao, para nas bordas e ignora apps ausentes da lista.
+ List<String> before = Prefs.favs(c);
+ String second = before.get(1);
+ check(Prefs.moveFav(c, second, -1) == 0); check(Prefs.favs(c).get(0).equals(second));
+ check(Prefs.moveFav(c, second, -1) == -1); check(Prefs.favs(c).get(0).equals(second));
+ String last = Prefs.favs(c).get(Prefs.favs(c).size() - 1);
+ check(Prefs.moveFav(c, last, 1) == -1);
+ check(Prefs.moveFav(c, "nao.existe", 1) == -1);
+ check(Prefs.favs(c).size() == before.size());
+ c.data.put("favs", "app1,com.ausente,app2");
+ check(Prefs.moveFav(c, "app2", -1) == 0);
+ check(Prefs.favs(c).equals(java.util.Arrays.asList("app2", "app1")));
  System.out.println("Favoritos e preferencia persistente dos graficos OK");
  }
 }''',
