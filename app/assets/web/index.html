@@ -19,7 +19,7 @@
   --sep:rgba(255,255,255,.08);--fill:rgba(255,255,255,.92);
   --wall:linear-gradient(135deg,#0B1022 0%,#140E22 55%,#050507 100%);
   --glowA:rgba(74,108,240,.50);--glowB:rgba(160,75,216,.44);--glowC:rgba(48,176,199,.36);
-  --grain:.07;--shadow:0 12px 32px rgba(0,0,0,.35);
+  --grain:.07;--shadow:0 12px 32px rgba(0,0,0,.35);--tint:rgba(10,132,255,.30);
 }
 html.light{
   --text:#1D1D1F;--muted:#6E6E73;--accent:#007AFF;--accent2:#0062CC;--red:#FF3B30;
@@ -27,7 +27,7 @@ html.light{
   --sep:rgba(0,0,0,.08);--fill:#fff;
   --wall:linear-gradient(135deg,#E6ECFF 0%,#F6ECF6 55%,#FFF3E6 100%);
   --glowA:rgba(169,193,255,.55);--glowB:rgba(255,201,168,.50);--glowC:rgba(153,226,208,.45);
-  --grain:.05;--shadow:0 12px 32px rgba(17,20,24,.10);
+  --grain:.05;--shadow:0 12px 32px rgba(17,20,24,.10);--tint:rgba(0,122,255,.16);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;color:var(--text);font-family:Inter,-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
@@ -57,11 +57,13 @@ h1{margin:0;font-size:32px;font-weight:700;letter-spacing:-.8px;display:flex;ali
 .ib{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--text)}
 
 /* Tocando agora */
-.now{display:flex;align-items:center;gap:12px;padding:10px 14px 10px 10px;border-radius:20px;margin-bottom:14px;min-height:64px}
-.now img,.now .ph{width:44px;height:44px;border-radius:11px;background:var(--fill);object-fit:contain;padding:5px;flex:none}
+.now{display:flex;align-items:center;gap:14px;padding:14px 16px 14px 14px;border-radius:24px;margin-bottom:14px;min-height:76px;
+  background:radial-gradient(120% 160% at 100% 0%,var(--tint),transparent 62%),var(--glass)}
+.now small{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}
+.now img,.now .ph{width:48px;height:48px;border-radius:12px;background:var(--fill);object-fit:contain;padding:5px;flex:none}
 .now .ph{display:grid;place-items:center;color:#1D1D1F}
 .now div{min-width:0;flex:1}
-.now b{display:block;font-size:17px;font-weight:600;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now b{display:block;font-size:20px;font-weight:700;letter-spacing:-.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .now span{display:block;font-size:14px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .view{display:none;flex-direction:column;gap:14px}.view.sel{display:flex}
@@ -107,13 +109,14 @@ html.light .seg{background:rgba(0,0,0,.06)}
 .rk.mic:active{background:var(--accent2)}
 
 /* Favoritos: fileira de icones (como o Dock), rola para o lado */
-.dock{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-left:18px;padding:4px 2px 2px;margin:0 -18px;padding-left:18px;padding-right:18px;scrollbar-width:none}
+.rowt{margin:8px 2px -4px;font-size:17px;font-weight:600;letter-spacing:-.2px}
+.dock{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-left:18px;padding:4px 2px 2px;margin:0 -18px;padding-left:18px;padding-right:18px;scrollbar-width:none}
 .dock::-webkit-scrollbar{display:none}
-.app{flex:none;width:64px;display:flex;flex-direction:column;align-items:center;gap:6px;scroll-snap-align:start}
-.app .ic{width:60px;height:60px;border-radius:15px;background:var(--fill);display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.18);overflow:hidden}
-.app .ic img{width:44px;height:44px;object-fit:contain}
-.app .ic b{font-size:22px;color:#1D1D1F}
-.app span{max-width:68px;font-size:11px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app{flex:none;width:120px;display:flex;flex-direction:column;align-items:flex-start;gap:7px;scroll-snap-align:start}
+.app .ic{width:120px;height:68px;border-radius:14px;background:var(--glass-strong);display:grid;place-items:center;box-shadow:0 6px 16px rgba(0,0,0,.22);overflow:hidden;border:1px solid var(--edge)}
+.app .ic img{width:40px;height:40px;object-fit:contain;padding:5px;border-radius:11px;background:#fff}
+.app .ic b{font-size:24px;font-weight:800;color:#fff}
+.app span{max-width:120px;padding-left:2px;font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* Enviar */
 .large{margin:4px 2px 0;font-size:32px;font-weight:700;letter-spacing:-.8px}
@@ -191,7 +194,7 @@ input[type=file]{display:none}
   <div class="now glass" aria-live="polite">
     <span class="ph" id="nowph"><svg width="24" height="24" viewBox="0 0 108 108" fill="none" stroke="currentColor" aria-hidden="true"><rect x="18" y="34" width="72" height="42" rx="12" stroke-width="7"/><circle cx="63" cy="55" r="13" stroke-width="7"/></svg></span>
     <img id="nowicon" alt="" hidden>
-    <div><b id="nown">…</b><span id="foco"></span></div>
+    <div><small>Na tela</small><b id="nown">…</b><span id="foco"></span></div>
   </div>
 
   <div class="remote glass">
@@ -234,6 +237,7 @@ input[type=file]{display:none}
     <button class="vicon" id="vmute" aria-label="Mudo"><svg id="vico" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg></button>
   </div>
 
+  <h3 class="rowt">Favoritos</h3>
   <div class="dock" id="apps" aria-label="Favoritos"></div>
 </section>
 
@@ -641,6 +645,7 @@ input[type=file]{display:none}
       favs.forEach(function (a) {
         var b = document.createElement('button'); b.className = 'app press'; b.setAttribute('aria-label', a.nome);
         var ic = document.createElement('span'); ic.className = 'ic';
+        if (a.cor) ic.style.background = a.cor;
         var img = document.createElement('img'); img.alt = ''; img.loading = 'lazy';
         img.src = '/api/icon?pkg=' + encodeURIComponent(a.pkg) + '&t=' + encodeURIComponent(T);
         img.onerror = function () { var m = document.createElement('b'); m.textContent = a.nome.charAt(0).toUpperCase(); img.replaceWith(m); };

@@ -205,4 +205,21 @@ final class Prefs {
         sp(c).edit().putString("favs", String.join(",", l)).apply();
         return added;
     }
+
+    /**
+     * Move um favorito uma ou mais posicoes (negativo = esquerda). Apps ausentes saem da lista
+     * antes, para o movimento ser o que aparece na tela. Retorna a posicao nova ou -1.
+     */
+    static synchronized int moveFav(Context c, String pkg, int delta) {
+        List<String> l = favs(c);
+        l.removeIf(p -> Apps.entry(c, p) == null);
+        int from = l.indexOf(pkg);
+        if (from < 0) return -1;
+        int to = Math.max(0, Math.min(l.size() - 1, from + delta));
+        if (to == from) return -1;
+        l.remove(from);
+        l.add(to, pkg);
+        sp(c).edit().putString("favs", String.join(",", l)).apply();
+        return to;
+    }
 }
