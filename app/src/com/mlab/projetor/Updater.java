@@ -69,7 +69,11 @@ final class Updater {
         return available;
     }
 
-    /** Confere logo depois de ligar e a cada 12 horas; avisa a tela inicial se houver versao nova. */
+    /**
+     * Confere logo depois de ligar e a cada 12 horas; avisa a tela inicial se houver versao nova.
+     * Nao e chamado: a procura automatica esta desligada (ver App.onCreate). A unica forma de
+     * atualizar e pelo menu da tela inicial, por escolha de quem esta no projetor.
+     */
     static void schedule(final Context c) {
         main.postDelayed(new Runnable() {
             @Override

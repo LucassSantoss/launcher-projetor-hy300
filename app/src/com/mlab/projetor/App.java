@@ -83,7 +83,8 @@ public class App extends Application {
         server = new WebServer(this, controller, ControlService.PORT);
         server.start();
         startKeepAlive();
-        Updater.schedule(this);
+        // Nao procura atualizacao sozinho: o version.json publicado e do repositorio de
+        // origem, e aceitar a versao dele substitui esta por cima. So pelo menu, de proposito.
     }
 
     /**
