@@ -1,4 +1,4 @@
-# Projetor — MLAB SOLUCTION
+# Projetor
 
 Tela inicial nova e controle pelo celular para projetores **HY300** e parecidos (Android 11, Allwinner).
 
@@ -7,7 +7,7 @@ Tela inicial nova e controle pelo celular para projetores **HY300** e parecidos 
 - Voz e Atalhos da Siri
 - Atualização automática e botão para voltar à tela original
 
-**Guia com fotos e downloads:** https://mlabsoluction.pages.dev
+**Guia de uso:** [`kit/GUIA.md`](kit/GUIA.md)
 **APKs:** veja em [Releases](../../releases)
 
 ## Como instalar
@@ -18,7 +18,7 @@ Tela inicial nova e controle pelo celular para projetores **HY300** e parecidos 
 | Instalador Android | Celular Android no mesmo Wi‑Fi, ADB ligado no projetor |
 | Claude Code / kit Windows | Computador no mesmo Wi‑Fi, ADB ligado no projetor |
 
-O passo a passo de cada um está no site.
+O passo a passo da instalação pelo Windows está em [`kit/GUIA.md`](kit/GUIA.md).
 
 ## Pastas
 
@@ -205,5 +205,3 @@ Depois, desative de novo se quiser voltar a iniciar direto no app.
 ## Aviso
 
 Sem vínculo com os fabricantes dos projetores nem com os apps citados. Sem garantia: use por sua conta.
-
-© MLAB SOLUCTION
